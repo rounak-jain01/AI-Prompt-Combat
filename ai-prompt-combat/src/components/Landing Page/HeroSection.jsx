@@ -1,0 +1,137 @@
+import React from "react";
+import { motion } from "framer-motion";
+import { Zap, Trophy, Users, ArrowRight } from "lucide-react";
+
+// Images Import
+import bannerImage from "../../assets/banner.jpg";
+import logo from "../../assets/Kagglelogo.png";
+import kalasarthiBadge from "../../assets/kalasarthiBadge.jpg";
+
+const HeroSection = () => {
+  return (
+    // 'h-screen' ensure karega ki ye laptop screen height se bada na ho
+    <section className="mt-5 relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-[#050505] pt-16">
+      
+      {/* 1. BACKGROUND BANNER ANIMATION */}
+      <div className="absolute inset-0 overflow-hidden z-0">
+        <motion.div
+          className="flex h-full w-[200%]"
+          initial={{ x: 0 }}
+          animate={{ x: "-50%" }}
+          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+          style={{ willChange: "transform" }}
+        >
+          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-50" />
+          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-50" />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
+      </div>
+
+      {/* GLOW EFFECTS (Thoda adjust kiya size taaki over-power na kare) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#D4AF37] rounded-full blur-[100px] opacity-15 pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-[#FFD700] rounded-full blur-[80px] opacity-25 mix-blend-screen pointer-events-none z-0" />
+
+      {/* FLOATING PARTICLES */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-[#D4AF37]/40 rounded-full"
+            initial={{ x: Math.random() * window.innerWidth, y: window.innerHeight }}
+            animate={{ y: -10, opacity: [0, 1, 0] }}
+            transition={{ duration: Math.random() * 5 + 5, repeat: Infinity, delay: Math.random() * 5, ease: "linear" }}
+          />
+        ))}
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-5xl mx-auto text-center">
+          
+          {/* LOGOS SECTION (Size reduced) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center justify-center gap-4 mb-4"
+          >
+            <div className="glass-card p-2 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm hover:border-[#D4AF37]/50 transition-colors">
+              <img src={logo} alt="Kaggle Koders" className="h-8 w-8 md:h-12 md:w-12 object-contain" />
+            </div>
+            <span className="text-xl text-[#D4AF37]/50 font-thin">×</span>
+            <div className="glass-card p-2 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm hover:border-[#D4AF37]/50 transition-colors">
+              <img src={kalasarthiBadge} alt="KalaSarthi" className="h-8 w-8 md:h-12 md:w-12 object-contain" />
+            </div>
+          </motion.div>
+
+          {/* MAIN TITLE (Compacted Font Sizes) */}
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="font-display font-black uppercase tracking-tighter leading-none drop-shadow-2xl mb-4"
+          >
+            <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+              AI
+            </span>
+            {/* Gap added for spacing */}
+            <span className="hidden md:inline"> </span>
+            <span className="text-4xl md:text-6xl lg:text-7xl gold-text text-glow block md:inline drop-shadow-[0_0_30px_rgba(212,175,55,0.6)]">
+              PROMPT
+            </span>
+            <br className="hidden md:block" />
+            <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline mt-1 md:mt-0">
+              COMBAT
+            </span>
+          </motion.h1>
+
+          {/* Tagline (Spacing reduced) */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-base md:text-xl text-gray-300 mb-8 max-w-xl mx-auto font-medium tracking-wide"
+          >
+            Where Creativity Meets <span className="text-[#D4AF37] font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">Precision</span>
+          </motion.p>
+
+          {/* BUTTONS (Margin reduced) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-10 px-6"
+          >
+            <button className="px-6 py-3 bg-[#D4AF37] text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-[#D4AF37] hover:border-[#D4AF37] hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+              <Trophy size={18} /> Register Now
+            </button>
+            <button className="px-6 py-3 border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-base rounded-full hover:bg-black hover:text-[#D4AF37] hover:border-[#D4AF37] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2">
+               View Rules <ArrowRight size={18} />
+            </button>
+          </motion.div>
+
+          {/* STATS GRID (Compact Padding) */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="grid grid-cols-3 gap-4 max-w-2xl mx-auto"
+          >
+            {[
+              { icon: Users, value: "200+", label: "Participants" },
+              { icon: Trophy, value: "₹5K", label: "Prize Pool" },
+              { icon: Zap, value: "2", label: "Rounds" },
+            ].map((stat, index) => (
+              <div key={index} className="p-3 md:p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm flex flex-col items-center hover:-translate-y-1 hover:border-[#D4AF37]/30 transition-all duration-300">
+                <stat.icon className="w-5 h-5 text-[#D4AF37] mb-1 drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+                <div className="text-xl md:text-2xl font-bold text-white mb-0">{stat.value}</div>
+                <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;
