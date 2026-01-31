@@ -42,10 +42,10 @@ const events = [
 
 const ImportantDates = () => {
   return (
-    <section className="relative py-24 bg-[#050505] overflow-hidden">
+    <section className="relative py-24 bg-dark overflow-hidden">
       
       {/* Background Ambience */}
-      <div className="absolute top-1/2 left-0 w-[400px] h-[800px] bg-[#D4AF37] rounded-full blur-[200px] opacity-5 pointer-events-none" />
+      <div className="absolute top-1/2 left-0 w-100 h-200 bg-primary rounded-full blur-[200px] opacity-5 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         
@@ -55,7 +55,7 @@ const ImportantDates = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[#D4AF37] font-bold tracking-[0.2em] uppercase text-sm mb-4 block"
+            className="text-primary font-bold tracking-[0.2em] uppercase text-sm mb-4 block"
           >
             Event Timeline
           </motion.span>
@@ -67,7 +67,7 @@ const ImportantDates = () => {
             transition={{ delay: 0.2 }}
             className="text-4xl md:text-5xl font-display font-bold text-white mb-6"
           >
-            Important <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F4CF57]">Dates</span>
+            Important <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-[#F4CF57]">Dates</span>
           </motion.h2>
           
           <motion.p 
@@ -85,7 +85,7 @@ const ImportantDates = () => {
         <div className="relative max-w-5xl mx-auto">
           
           {/* VERTICAL GLOWING LINE (Center for Desktop, Left for Mobile) */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 md:-ml-0.5 bg-gradient-to-b from-transparent via-[#D4AF37]/50 to-transparent shadow-[0_0_15px_#D4AF37]" />
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 md:-ml-0.5 bg-linear-to-b from-transparent via-primary/50 to-transparent shadow-[0_0_15px_#D4AF37]" />
 
           <div className="space-y-12">
             {events.map((event, index) => (
@@ -102,24 +102,24 @@ const ImportantDates = () => {
                 
                 {/* 1. CONTENT CARD */}
                 <div className="w-full md:w-[calc(50%-40px)] pl-20 md:pl-0">
-                  <div className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-[#D4AF37]/50 transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.2)] backdrop-blur-sm overflow-hidden">
+                  <div className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.2)] backdrop-blur-sm overflow-hidden">
                     
                     {/* Hover Glow */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-linear-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                     <div className="relative z-10">
                       {/* Date Badge */}
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold mb-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold mb-4">
                         <Calendar size={12} />
                         {event.date}
                       </div>
 
                       {/* Title & Icon */}
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-bold text-white group-hover:text-[#D4AF37] transition-colors">
+                        <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
                           {event.title}
                         </h3>
-                        <event.icon className="w-6 h-6 text-gray-500 group-hover:text-[#D4AF37] transition-colors" />
+                        <event.icon className="w-6 h-6 text-gray-500 group-hover:text-primary transition-colors" />
                       </div>
 
                       <p className="text-gray-400 text-sm leading-relaxed">
@@ -130,8 +130,8 @@ const ImportantDates = () => {
                 </div>
 
                 {/* 2. CENTER NODE (Dot) */}
-                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-[#050505] border-2 border-[#D4AF37] shadow-[0_0_15px_#D4AF37] z-20">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-dark border-2 border-primary shadow-[0_0_15px_#D4AF37] z-20">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
                 </div>
 
                 {/* 3. EMPTY SPACE (For layout balance) */}

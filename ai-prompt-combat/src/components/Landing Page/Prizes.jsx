@@ -4,10 +4,10 @@ import { Trophy, Medal, Crown, Gift, CheckCircle, ShieldCheck, Star } from 'luci
 
 const Prizes = () => {
   return (
-    <section className="relative py-24 bg-[#050505] overflow-hidden">
+    <section className="relative py-24 bg-dark overflow-hidden">
       
       {/* Background - Static Glow (Performance Friendly) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FFD700]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-[#FFD700]/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         
@@ -22,7 +22,7 @@ const Prizes = () => {
         </div>
 
         {/* CROWN ICON (Center Top) */}
-        <div className="flex justify-center mb-[-20px] relative z-20">
+        <div className="flex justify-center -mb-5 relative z-20">
              <motion.div 
                animate={{ y: [0, -5, 0] }}
                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -42,11 +42,11 @@ const Prizes = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="order-2 md:order-1 w-full md:w-[300px]"
+            className="order-2 md:order-1 w-full md:w-75"
           >
-            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-gray-500 transition-colors duration-300 h-[400px]">
+            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-gray-500 transition-colors duration-300 h-100">
               {/* Icon Circle */}
-              <div className="w-16 h-16 rounded-full bg-gradient-to-b from-gray-300 to-gray-500 flex items-center justify-center mb-4 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-linear-to-b from-gray-300 to-gray-500 flex items-center justify-center mb-4 shadow-lg">
                 <Medal size={32} className="text-black fill-current" />
               </div>
               
@@ -70,13 +70,13 @@ const Prizes = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="order-1 md:order-2 w-full md:w-[350px] relative z-10"
+            className="order-1 md:order-2 w-full md:w-87.5 relative z-10"
           >
             {/* Main Gold Card */}
-            <div className="relative bg-[#0A0A0A] rounded-3xl border-2 border-[#FFD700] p-8 flex flex-col items-center text-center h-[460px] shadow-[0_0_30px_-10px_rgba(255,215,0,0.3)]">
+            <div className="relative bg-[#0A0A0A] rounded-3xl border-2 border-[#FFD700] p-8 flex flex-col items-center text-center h-115 shadow-[0_0_30px_-10px_rgba(255,215,0,0.3)]">
               
               {/* Icon Circle */}
-              <div className="w-20 h-20 rounded-full bg-gradient-to-b from-[#FFD700] to-[#B8860B] flex items-center justify-center mb-4 shadow-lg shadow-[#FFD700]/20">
+              <div className="w-20 h-20 rounded-full bg-linear-to-b from-[#FFD700] to-[#B8860B] flex items-center justify-center mb-4 shadow-lg shadow-[#FFD700]/20">
                 <Trophy size={40} className="text-black fill-current" />
               </div>
               
@@ -102,11 +102,11 @@ const Prizes = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="order-3 w-full md:w-[300px]"
+            className="order-3 w-full md:w-75"
           >
-            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-[#CD7F32] transition-colors duration-300 h-[400px]">
+            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-[#CD7F32] transition-colors duration-300 h-100">
               {/* Icon Circle */}
-              <div className="w-16 h-16 rounded-full bg-gradient-to-b from-[#CD7F32] to-[#8B4513] flex items-center justify-center mb-4 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-linear-to-b from-[#CD7F32] to-[#8B4513] flex items-center justify-center mb-4 shadow-lg">
                 <Medal size={32} className="text-white fill-current" />
               </div>
               

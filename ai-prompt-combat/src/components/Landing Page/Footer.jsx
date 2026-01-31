@@ -30,7 +30,7 @@ const Footer = () => {
     <footer className="relative bg-[#020202] pt-24 pb-12 overflow-hidden border-t border-white/5">
       
       {/* Background Ambient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D4AF37] rounded-full blur-[150px] opacity-[0.03] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-100 bg-primary rounded-full blur-[150px] opacity-[0.03] pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         
@@ -45,7 +45,7 @@ const Footer = () => {
             </div>
 
             {/* Tagline */}
-            <h3 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F4CF57] mb-4 italic">
+            <h3 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-primary to-[#F4CF57] mb-4 italic">
               "Crack the Code, Kaggle On!"
             </h3>
 
@@ -56,8 +56,8 @@ const Footer = () => {
 
             {/* CO-ORGANIZED BY */}
             <div>
-              <span className="text-[#D4AF37] text-xs font-bold tracking-[0.2em] uppercase mb-4 block flex items-center gap-2">
-                <span className="w-8 h-px bg-[#D4AF37]"></span>
+              <span className="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-4 block items-center gap-2">
+                <span className="w-8 h-px bg-primary"></span>
                 Co-Organized By
               </span>
               <div className="flex items-center gap-4">
@@ -82,9 +82,9 @@ const Footer = () => {
                 <li key={index}>
                   <a 
                     href={link.href}
-                    className="group flex items-center gap-2 text-gray-400 hover:text-[#D4AF37] transition-colors duration-300 w-fit"
+                    className="group flex items-center gap-2 text-gray-400 hover:text-primary transition-colors duration-300 w-fit"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] scale-0 group-hover:scale-100 transition-transform duration-300" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary scale-0 group-hover:scale-100 transition-transform duration-300" />
                     <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
                   </a>
                 </li>
@@ -99,16 +99,16 @@ const Footer = () => {
             {/* Email Box */}
             <a 
               href="mailto:contact@kagglekoders.com" 
-              className="group flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 transition-all duration-300 mb-8"
+              className="group flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 mb-8"
             >
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#D4AF37] group-hover:text-black transition-colors duration-300">
+              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-primary group-hover:text-black transition-colors duration-300">
                 <Mail size={20} />
               </div>
               <div>
-                <span className="block text-xs text-gray-400 uppercase tracking-wider group-hover:text-[#D4AF37]">Email Us</span>
+                <span className="block text-xs text-gray-400 uppercase tracking-wider group-hover:text-primary">Email Us</span>
                 <span className="block text-sm md:text-base font-medium text-white">contact@kagglekoders.com</span>
               </div>
-              <ArrowUpRight size={18} className="ml-auto text-gray-500 group-hover:text-[#D4AF37] group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowUpRight size={18} className="ml-auto text-gray-500 group-hover:text-primary group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform duration-300" />
             </a>
 
             {/* Social Icons */}
@@ -135,11 +135,11 @@ const Footer = () => {
           </p>
           
           <div className="flex items-center gap-6">
-            <a href="#" className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors">Privacy Policy</a>
-            <a href="#" className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors">Terms of Service</a>
+            <a href="#" className="text-sm text-gray-500 hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="#" className="text-sm text-gray-500 hover:text-primary transition-colors">Terms of Service</a>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 hidden md:flex">
+          <div className="flex items-center gap-1.5 text-xs text-gray-600 md:flex">
             <span>Made with</span>
             <Heart size={10} className="text-red-500 fill-red-500 animate-pulse" />
             <span>by Tech Team</span>

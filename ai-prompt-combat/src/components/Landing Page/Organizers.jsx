@@ -8,10 +8,10 @@ import logoKalasarthi from '../../assets/kalasarthiBadge.jpg';
 
 const Organizers = () => {
   return (
-    <section className="relative py-24 bg-[#050505] overflow-hidden">
+    <section className="relative py-24 bg-dark overflow-hidden">
       
       {/* Background Glow (Subtle) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#D4AF37] rounded-full blur-[150px] opacity-5 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-100 bg-primary rounded-full blur-[150px] opacity-5 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         

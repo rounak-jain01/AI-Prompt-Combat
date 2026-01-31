@@ -1,154 +1,140 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Linkedin, Twitter, Instagram, Github, Heart, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Sparkles, ChevronRight } from 'lucide-react';
 
-// Import Logos
-import logoKaggle from '../../assets/Kagglelogo.png';
-import logoKalasarthi from '../../assets/kalasarthiBadge.jpg';
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  // Scroll Detection for Glass Effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const footerLinks = [
-    { name: "About", href: "#about" },
-    { name: "Format", href: "#format" },
-    { name: "Timeline", href: "#timeline" },
-    { name: "Prizes", href: "#prizes" },
-    { name: "Organizers", href: "#organizers" },
-    { name: "Rules", href: "#rules" },
-    { name: "Contact", href: "#contact" },
-  ];
-
-  const socialLinks = [
-    { icon: Linkedin, href: "#", color: "#0077B5" },
-    { icon: Twitter, href: "#", color: "#1DA1F2" },
-    { icon: Instagram, href: "#", color: "#E1306C" },
-    { icon: Github, href: "#", color: "#ffffff" },
+  // Updated Links to match LandingPage.jsx IDs
+  const navLinks = [
+    { name: 'Home', href: '#home' },
+    { name: 'About', href: '#about' },
+    { name: 'Format', href: '#format' },
+    { name: 'Timeline', href: '#timeline' },
+    { name: 'Prizes', href: '#prizes' },
+    { name: 'Team', href: '#team' },
   ];
 
   return (
-    <footer className="relative bg-[#020202] pt-24 pb-12 overflow-hidden border-t border-white/5">
-      
-      {/* Background Ambient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D4AF37] rounded-full blur-[150px] opacity-[0.03] pointer-events-none" />
-
-      <div className="container mx-auto px-6 relative z-10">
+    <>
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-6 px-4">
         
-        {/* MAIN GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
-          
-          {/* LEFT COLUMN: BRANDING (Span 5 cols) */}
-          <div className="md:col-span-5">
-            {/* Logo */}
-            <div className="mb-6">
-              <img src={logoKaggle} alt="Kaggle Koders" className="h-10 w-auto" />
-            </div>
+        <nav
+          className={`
+            w-full max-w-5xl rounded-2xl transition-all duration-500 border
+            ${scrolled 
+              ? "bg-black/60 border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]" 
+              : "bg-white/5 border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
+            }
+            /* ULTRA FROSTED GLASS EFFECT */
+            backdrop-blur-[10px] backdrop-saturate-150
+          `}
+        >
+          {/* Glass Noise Texture (Optional) */}
+          <div className="absolute inset-0 rounded-2xl bg-white/5 pointer-events-none" />
 
-            {/* Tagline */}
-            <h3 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F4CF57] mb-4 italic">
-              "Crack the Code, Kaggle On!"
-            </h3>
-
-            {/* Description */}
-            <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-sm">
-              A community of passionate data scientists and AI enthusiasts competing, learning, and growing together to foster innovation.
-            </p>
-
-            {/* CO-ORGANIZED BY */}
-            <div>
-              <span className="text-[#D4AF37] text-xs font-bold tracking-[0.2em] uppercase mb-4 block flex items-center gap-2">
-                <span className="w-8 h-px bg-[#D4AF37]"></span>
-                Co-Organized By
-              </span>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                  <img src={logoKaggle} alt="Kaggle Koders" className="h-6 w-6 object-contain" />
-                  <span className="text-sm font-bold text-gray-200">Kaggle Koders</span>
-                </div>
-                <span className="text-gray-600">×</span>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                  <img src={logoKalasarthi} alt="KalaSarthi" className="h-6 w-6 object-contain rounded-full" />
-                  <span className="text-sm font-bold text-gray-200">KalaSarthi</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* MIDDLE COLUMN: QUICK LINKS (Span 3 cols) */}
-          <div className="md:col-span-3 md:pl-8">
-            <h4 className="text-white font-bold text-lg mb-6">Quick Links</h4>
-            <ul className="space-y-3">
-              {footerLinks.map((link, index) => (
-                <li key={index}>
-                  <a 
-                    href={link.href}
-                    className="group flex items-center gap-2 text-gray-400 hover:text-[#D4AF37] transition-colors duration-300 w-fit"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] scale-0 group-hover:scale-100 transition-transform duration-300" />
-                    <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* RIGHT COLUMN: CONTACT (Span 4 cols) */}
-          <div className="md:col-span-4">
-            <h4 className="text-white font-bold text-lg mb-6">Get In Touch</h4>
+          <div className="relative flex items-center justify-center md:justify-between px-6 py-3 md:py-4">
             
-            {/* Email Box */}
-            <a 
-              href="mailto:contact@kagglekoders.com" 
-              className="group flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 transition-all duration-300 mb-8"
-            >
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[#D4AF37] group-hover:text-black transition-colors duration-300">
-                <Mail size={20} />
+            {/* LOGO */}
+            <a href="#home" className="flex items-center gap-3 cursor-pointer group mr-auto md:mr-0">
+              <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-primary to-[#8a6e15] shadow-lg group-hover:shadow-primary/50 transition-shadow duration-300">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <span className="block text-xs text-gray-400 uppercase tracking-wider group-hover:text-[#D4AF37]">Email Us</span>
-                <span className="block text-sm md:text-base font-medium text-white">contact@kagglekoders.com</span>
+              <div className="flex flex-col">
+                <span className="text-white font-display font-bold text-lg leading-none tracking-wide drop-shadow-lg">
+                  AI PROMPT
+                </span>
+                <span className="text-primary text-[10px] font-bold tracking-[0.3em] uppercase">
+                  Combat
+                </span>
               </div>
-              <ArrowUpRight size={18} className="ml-auto text-gray-500 group-hover:text-[#D4AF37] group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform duration-300" />
             </a>
 
-            {/* Social Icons */}
-            <h4 className="text-white font-bold text-sm mb-4">Follow Updates</h4>
-            <div className="flex gap-3">
-              {socialLinks.map((social, index) => (
+            {/* DESKTOP MENU */}
+            <div className="hidden lg:flex items-center gap-8">
+              {navLinks.map((link) => (
                 <a 
-                  key={index} 
-                  href={social.href}
-                  className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:-translate-y-1 hover:shadow-[0_5px_15px_-5px_rgba(0,0,0,0.5)] transition-all duration-300 group"
+                  key={link.name} 
+                  href={link.href} 
+                  className="relative group text-sm font-medium text-gray-200 hover:text-primary transition-colors duration-300 drop-shadow-md"
                 >
-                  <social.icon size={18} className="group-hover:scale-110 transition-transform duration-300" />
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
                 </a>
               ))}
             </div>
+
+            {/* CTA BUTTON */}
+            <div className="hidden lg:block ml-auto md:ml-0">
+              <a href="#contact">
+                <button className="group relative px-7 py-2.5 overflow-hidden rounded-xl bg-primary border border-primary text-black font-bold text-sm shadow-[0_0_20px_-5px_#D4AF37] transition-all duration-300 hover:shadow-[0_0_30px_-5px_#D4AF37]">
+                  {/* BLACK FILL FROM BOTTOM HOVER */}
+                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  
+                  <span className="relative z-10 flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                    Register Now 
+                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </a>
+            </div>
+
+            {/* MOBILE TOGGLE */}
+            <button 
+              className="lg:hidden ml-auto p-2 text-white bg-white/10 border border-white/10 rounded-xl backdrop-blur-md hover:bg-white/20"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
           </div>
-
-        </div>
-
-        {/* BOTTOM BAR */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-sm">
-            © {currentYear} Kaggle Koders × KalaSarthi. All rights reserved.
-          </p>
-          
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors">Privacy Policy</a>
-            <a href="#" className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors">Terms of Service</a>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 hidden md:flex">
-            <span>Made with</span>
-            <Heart size={10} className="text-red-500 fill-red-500 animate-pulse" />
-            <span>by Tech Team</span>
-          </div>
-        </div>
-
+        </nav>
       </div>
-    </footer>
+
+      {/* MOBILE MENU - Heavy Glass */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-28 left-4 right-4 z-40 lg:hidden"
+          >
+            <div className="bg-[#121212]/80 backdrop-blur-[50px] backdrop-saturate-150 border border-white/10 rounded-2xl p-5 shadow-2xl">
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <a 
+                    key={link.name} 
+                    href={link.href}
+                    className="flex items-center justify-between p-4 text-gray-200 border-b border-white/5 hover:text-primary transition-all"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span className="font-medium">{link.name}</span>
+                    <ChevronRight size={16} />
+                  </a>
+                ))}
+                <a href="#contact" onClick={() => setIsOpen(false)}>
+                  <button className="w-full py-4 mt-4 bg-primary text-black font-bold rounded-xl active:scale-95 transition-transform">
+                    Register Now
+                  </button>
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
-export default Footer;
+export default Navbar;

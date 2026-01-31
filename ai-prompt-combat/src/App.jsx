@@ -4,7 +4,7 @@ import LandingPage from './pages/LandingPage';   // New Page Import
 
 function App() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-[#FFD700] selection:text-black">
+    <div className="min-h-screen bg-dark text-white selection:bg-[#FFD700] selection:text-black">
       {/* Navbar har page par dikhega isliye yahan rakha hai */}
       <Navbar /> 
       
