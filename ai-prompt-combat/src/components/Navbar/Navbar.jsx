@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, Linkedin, Twitter, Instagram, Github, Heart, ArrowUpRight } from 'lucide-react';
 
 // Import Logos
-import logoKaggle from '../../assets/logo.png';
+import logoKaggle from '../../assets/Kagglelogo.png';
 import logoKalasarthi from '../../assets/kalasarthiBadge.jpg';
 
 const Footer = () => {

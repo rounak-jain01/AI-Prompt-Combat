@@ -2,15 +2,15 @@ import React from 'react';
 
 // Import Components from the new 'LandingPage' folder
 // Note: Ensure your file paths match exactly where you moved the files
-import HeroSection from '../components/LandingPage/HeroSection';
-import About from '../components/LandingPage/About';
-import Timeline from '../components/LandingPage/Timeline';
-import ImportantDates from '../components/LandingPage/ImportantDates';
-import PastEvents from '../components/LandingPage/PastEvents';
-import Prizes from '../components/LandingPage/Prizes';
-import Organizers from '../components/LandingPage/Organizers';
-import Team from '../components/LandingPage/Team';
-import Footer from '../components/LandingPage/Footer';
+import HeroSection from '../components/Landing Page/HeroSection';
+import About from '../components/Landing Page/About';
+import Timeline from '../components/Landing Page/Timeline';
+import ImportantDates from '../components/Landing Page/ImportantDates';
+import PastEvents from '../components/Landing Page/PastEvents';
+import Prizes from '../components/Landing Page/Prizes';
+import Organizers from '../components/Landing Page/Organizers';
+import Team from '../components/Landing Page/Team';
+import Footer from '../components/Landing Page/Footer';
 
 const LandingPage = () => {
   return (
