@@ -113,13 +113,13 @@ const Signup = () => {
   };
 
   return (
-    <div className="h-screen w-full flex bg-[#050505] overflow-hidden">
+    <div className="h-screen w-full flex bg-dark overflow-hidden">
       {/* === LEFT SIDE === */}
-      <div className="w-full lg:w-[40%] h-full flex flex-col justify-center px-8 lg:px-12 relative z-10 bg-[#050505] border-r border-white/5">
+      <div className="w-full lg:w-[40%] h-full flex flex-col justify-center px-8 lg:px-12 relative z-10 bg-dark border-r border-white/5">
         {/* Compact Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="text-[#D4AF37]" size={20} />
+            <Sparkles className="text-primary" size={20} />
             <span className="text-white font-bold text-base tracking-wider">
               AI PROMPT COMBAT
             </span>
@@ -227,7 +227,7 @@ const Signup = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 mt-2 bg-[#D4AF37] text-black font-bold rounded-lg hover:bg-[#b8952b] transition-all flex items-center justify-center gap-2 disabled:opacity-70 text-sm"
+            className="w-full py-3 mt-2 bg-primary text-black font-bold rounded-lg hover:bg-[#b8952b] transition-all flex items-center justify-center gap-2 disabled:opacity-70 text-sm"
           >
             {isLoading ? (
               <Loader2 size={16} className="animate-spin" />
@@ -244,7 +244,7 @@ const Signup = () => {
               Already joined?{" "}
               <Link
                 to="/login"
-                className="text-[#D4AF37] font-semibold hover:underline"
+                className="text-primary font-semibold hover:underline"
               >
                 Log in
               </Link>
@@ -284,7 +284,7 @@ const FormInput = ({
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="relative group">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
         <Icon size={14} />
       </div>
       <input
@@ -292,7 +292,7 @@ const FormInput = ({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full bg-[#111] border border-[#222] rounded-lg py-2.5 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all placeholder-gray-700"
+        className="w-full bg-[#111] border border-[#222] rounded-lg py-2.5 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-gray-700"
         placeholder={label}
         required={required}
       />
@@ -314,7 +314,7 @@ const PasswordInput = ({
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="relative group">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
         <Lock size={14} />
       </div>
       <input
@@ -322,7 +322,7 @@ const PasswordInput = ({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full bg-[#111] border border-[#222] rounded-lg py-2.5 pl-9 pr-9 text-xs text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all placeholder-gray-700"
+        className="w-full bg-[#111] border border-[#222] rounded-lg py-2.5 pl-9 pr-9 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-gray-700"
         placeholder="••••"
         required={required}
       />

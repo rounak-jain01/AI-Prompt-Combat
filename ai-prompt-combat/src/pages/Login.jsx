@@ -86,13 +86,13 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen w-full flex bg-[#050505] overflow-hidden">
+    <div className="h-screen w-full flex bg-dark overflow-hidden">
       {/* === LEFT SIDE === */}
-      <div className="w-full lg:w-[40%] h-full flex flex-col justify-center px-8 lg:px-16 relative z-10 bg-[#050505] border-r border-white/5">
+      <div className="w-full lg:w-[40%] h-full flex flex-col justify-center px-8 lg:px-16 relative z-10 bg-dark border-r border-white/5">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="text-[#D4AF37]" size={22} />
+            <Sparkles className="text-primary" size={22} />
             <span className="text-white font-bold text-lg tracking-wider">
               AI PROMPT COMBAT
             </span>
@@ -112,7 +112,7 @@ const Login = () => {
               Email Address
             </label>
             <div className="relative group">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
                 <Mail size={16} />
               </div>
               <input
@@ -120,7 +120,7 @@ const Login = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-[#111] border border-[#222] rounded-lg py-3 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all placeholder-gray-700"
+                className="w-full bg-[#111] border border-[#222] rounded-lg py-3 pl-10 pr-3 text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-gray-700"
                 placeholder="Enter your email"
                 required
               />
@@ -133,12 +133,12 @@ const Login = () => {
               <label className="text-xs font-medium text-gray-400">
                 Password
               </label>
-              <a href="#" className="text-xs text-[#D4AF37] hover:underline">
+              <a href="#" className="text-xs text-primary hover:underline">
                 Forgot Password?
               </a>
             </div>
             <div className="relative group">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
                 <Lock size={16} />
               </div>
               <input
@@ -146,7 +146,7 @@ const Login = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-[#111] border border-[#222] rounded-lg py-3 pl-10 pr-10 text-sm text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all placeholder-gray-700"
+                className="w-full bg-[#111] border border-[#222] rounded-lg py-3 pl-10 pr-10 text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-gray-700"
                 placeholder="••••••••"
                 required
               />
@@ -164,7 +164,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 mt-2 bg-[#D4AF37] text-black font-bold rounded-xl hover:bg-[#b8952b] transition-all flex items-center justify-center gap-2 disabled:opacity-70 shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
+            className="w-full py-3.5 mt-2 bg-primary text-black font-bold rounded-xl hover:bg-[#b8952b] transition-all flex items-center justify-center gap-2 disabled:opacity-70 shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
           >
             {isLoading ? (
               <Loader2 size={20} className="animate-spin" />
@@ -181,7 +181,7 @@ const Login = () => {
               New here?{" "}
               <Link
                 to="/register"
-                className="text-[#D4AF37] font-semibold hover:underline"
+                className="text-primary font-semibold hover:underline"
               >
                 Create an account
               </Link>
@@ -199,7 +199,7 @@ const Login = () => {
         />
         <div className="absolute inset-0 shadow-[inset_100px_0_100px_-50px_rgba(5,5,5,1)]"></div>
         <div className="absolute bottom-12 right-12 text-right">
-          <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs text-[#D4AF37] font-mono mb-2">
+          <div className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs text-primary font-mono mb-2">
             System Status: Active
           </div>
           <p className="text-gray-400 text-sm max-w-xs ml-auto">

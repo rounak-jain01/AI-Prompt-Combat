@@ -28,7 +28,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#050505] text-white selection:bg-[#FFD700] selection:text-black">
+      <div className="min-h-screen bg-dark text-white selection:bg-[#FFD700] selection:text-black">
         
         {/* === TOASTER FIX === */}
         <Toaster 
