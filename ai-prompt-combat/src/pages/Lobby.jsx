@@ -52,7 +52,7 @@ const Lobby = () => {
             Basic prompt engineering challenges. Decrypt the images and generate the correct prompts to unlock the next level.
           </p>
 
-          <Link to="/round-1">
+          <Link to="/round-1/rules">
             <button className="w-full py-3 rounded-xl bg-primary text-black font-bold hover:bg-white transition-colors flex items-center justify-center gap-2">
               Enter Arena <Play size={18} fill="black" />
             </button>

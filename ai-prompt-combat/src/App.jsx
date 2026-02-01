@@ -1,19 +1,25 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; 
-import Lenis from '@studio-freight/lenis';
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import Lenis from "@studio-freight/lenis";
 
-// IMPORT PAGES
-import Navbar from './components/Navbar/Navbar';
-import LandingPage from './pages/LandingPage';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import Lobby from './pages/Lobby';
-import Round1 from './pages/Round1'; // New Import
+import Navbar from "./components/Navbar/Navbar";
+import LandingPage from "./pages/LandingPage";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Lobby from "./pages/Lobby";
+import Round1Rules from "./pages/Round1Rules";
+import Round1 from "./pages/Round1";
+
+// Layout Component for Pages WITH Navbar
+const LayoutWithNavbar = ({ children }) => (
+  <>
+    <Navbar />
+    {children}
+  </>
+);
 
 function App() {
-  
-  // Smooth Scroll Effect (Lenis)
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -31,61 +37,47 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-[#050505] text-white selection:bg-[#FFD700] selection:text-black">
-        
-        {/* === GLOBAL NOTIFICATIONS (TOASTER) === */}
-        <Toaster 
+        <Toaster
           position="top-center"
           reverseOrder={false}
-          containerStyle={{
-            top: 40,
-            zIndex: 99999, // Ensures it shows above everything
-          }}
+          containerStyle={{ top: 80, zIndex: 99999 }}
           toastOptions={{
             style: {
-              background: '#0A0A0A',
-              color: '#fff',
-              border: '1px solid #333',
-              fontSize: '14px',
+              background: "#0A0A0A",
+              color: "#fff",
+              border: "1px solid #333",
             },
             success: {
-              style: {
-                border: '1px solid #D4AF37', // Gold Border for Success
-                color: '#D4AF37',
-              },
-              iconTheme: {
-                primary: '#D4AF37',
-                secondary: '#000',
-              },
-            },
-            error: {
-              style: {
-                border: '1px solid #ef4444', // Red Border for Error
-                color: '#ef4444',
-              },
+              style: { border: "1px solid #D4AF37", color: "#D4AF37" },
+              iconTheme: { primary: "#D4AF37", secondary: "#000" },
             },
           }}
         />
 
         <Routes>
-          {/* LANDING PAGE (With Navbar) */}
-          <Route 
-            path="/" 
+          {/* PAGES WITH NAVBAR */}
+          <Route
+            path="/"
             element={
-              <>
-                <Navbar />
+              <LayoutWithNavbar>
                 <LandingPage />
-              </>
-            } 
+              </LayoutWithNavbar>
+            }
           />
-
-          {/* AUTH PAGES */}
+          <Route
+            path="/lobby"
+            element={
+              <LayoutWithNavbar>
+                <Lobby />
+              </LayoutWithNavbar>
+            }
+          />
+          {/* PAGES WITHOUT NAVBAR (Clean Layout) */}
+          <Route path="/round-1/rules" element={<Round1Rules />} />
           <Route path="/register" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          
-          {/* DASHBOARD & ROUNDS */}
-          <Route path="/lobby" element={<Lobby />} />
-          <Route path="/round-1" element={<Round1 />} />
-
+          <Route path="/round-1/game" element={<Round1 />} />{" "}
+          {/* No Navbar Here */}
         </Routes>
       </div>
     </Router>
