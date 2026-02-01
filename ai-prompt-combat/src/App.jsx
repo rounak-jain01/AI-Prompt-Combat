@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; // Import check karein
+import { Toaster } from 'react-hot-toast'; 
 import Lenis from '@studio-freight/lenis';
 
 import Navbar from './components/Navbar/Navbar';
@@ -12,7 +12,7 @@ import Lobby from './pages/Lobby';
 function App() {
   
   useEffect(() => {
-    // Lenis scroll code...
+    // Lenis scroll code
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -31,7 +31,6 @@ function App() {
       <div className="min-h-screen bg-[#050505] text-white selection:bg-[#FFD700] selection:text-black">
         
         {/* === TOASTER FIX === */}
-        {/* zIndex aur containerStyle add kiya hai taaki ye sabse upar dikhe */}
         <Toaster 
           position="top-center"
           reverseOrder={false}
@@ -40,7 +39,7 @@ function App() {
             left: 20,
             bottom: 20,
             right: 20,
-            zIndex: 99999, // YEH SABSE IMPORTANT HAI
+            zIndex: 99999, 
           }}
           toastOptions={{
             style: {

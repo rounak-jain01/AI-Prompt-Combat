@@ -84,7 +84,7 @@ const ImportantDates = () => {
         {/* TIMELINE CONTAINER */}
         <div className="relative max-w-5xl mx-auto">
           
-          {/* VERTICAL GLOWING LINE (Center for Desktop, Left for Mobile) */}
+          {/* VERTICAL GLOWING LINE  */}
           <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 md:-ml-0.5 bg-linear-to-b from-transparent via-primary/50 to-transparent shadow-[0_0_15px_#D4AF37]" />
 
           <div className="space-y-12">
@@ -134,7 +134,7 @@ const ImportantDates = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
                 </div>
 
-                {/* 3. EMPTY SPACE (For layout balance) */}
+                {/* 3. EMPTY SPACE  */}
                 <div className="hidden md:block w-[calc(50%-40px)]" />
                 
               </motion.div>

@@ -83,17 +83,15 @@ const PastEvents = () => {
 
         <motion.div 
           className="flex gap-8 w-max"
-          // Animation: X axis par move karega
+          // Animation: 
           animate={{ x: ["0%", "-50%"] }} 
           transition={{ 
-            duration: 30, // Speed control (jitna zyada number, utna slow)
+            duration: 30, 
             ease: "linear", 
             repeat: Infinity 
           }}
-          // Hover karne par animation ruk jayega
           whileHover={{ animationPlayState: "paused" }} 
         >
-          {/* List ko 2 baar render kiya taaki seamless loop bane */}
           {[...events, ...events].map((event, index) => (
             <div 
               key={`${event.id}-${index}`}

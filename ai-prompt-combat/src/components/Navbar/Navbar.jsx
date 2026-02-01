@@ -16,7 +16,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Updated Links to match LandingPage.jsx IDs
   const navLinks = [
     { name: "Home", href: "#home" },
     { name: "About", href: "#about" },
@@ -41,7 +40,7 @@ const Navbar = () => {
             backdrop-blur-[10px] backdrop-saturate-150
           `}
         >
-          {/* Glass Noise Texture (Optional) */}
+          {/* Glass Noise Texture  */}
           <div className="absolute inset-0 rounded-2xl bg-white/5 pointer-events-none" />
 
           <div className="relative flex items-center justify-center md:justify-between px-6 py-3 md:py-4">
@@ -81,7 +80,7 @@ const Navbar = () => {
             <div className="hidden lg:block ml-auto md:ml-0">
               <Link to="/register">
                 <button className="group relative px-7 py-2.5 overflow-hidden rounded-xl bg-primary border border-primary text-black font-bold text-sm shadow-[0_0_20px_-5px_#D4AF37] transition-all duration-300 hover:shadow-[0_0_30px_-5px_#D4AF37]">
-                  {/* BLACK FILL FROM BOTTOM HOVER */}
+                 
                   <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
 
                   <span className="relative z-10 flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
@@ -106,7 +105,7 @@ const Navbar = () => {
         </nav>
       </div>
 
-      {/* MOBILE MENU - Heavy Glass */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {isOpen && (
           <motion.div

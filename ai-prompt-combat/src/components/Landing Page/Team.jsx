@@ -180,7 +180,6 @@ const teamMembers2 = [
   },
 ];
 
-// Helper Component for Cards
 const MemberCard = ({ member, isLeader = false }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
@@ -204,7 +203,7 @@ const MemberCard = ({ member, isLeader = false }) => (
         />
       </div>
 
-      {/* Leader Badge (Gold Circle Icon) */}
+      {/* Leader Badge  */}
       {isLeader && (
         <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black shadow-lg z-10">
           <Crown size={14} fill="black" />

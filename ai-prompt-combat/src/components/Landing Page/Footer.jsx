@@ -29,7 +29,7 @@ const Footer = () => {
   return (
     <footer className="relative bg-[#020202] pt-24 pb-12 overflow-hidden border-t border-white/5">
       
-      {/* Background Ambient Glow */}
+      {/* Background */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-100 bg-primary rounded-full blur-[150px] opacity-[0.03] pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
@@ -37,11 +37,12 @@ const Footer = () => {
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           
-          {/* LEFT COLUMN: BRANDING (Span 5 cols) */}
+          {/* LEFT COLUMN: BRANDING  */}
           <div className="md:col-span-5">
             {/* Logo */}
             <div className="mb-6">
               <img src={logoKaggle} alt="Kaggle Koders" className="h-10 w-auto" />
+              <img src={logoKalasarthi} alt="Kaggle Koders" className="h-10 w-auto" />
             </div>
 
             {/* Tagline */}
@@ -74,7 +75,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* MIDDLE COLUMN: QUICK LINKS (Span 3 cols) */}
+          {/* MIDDLE COLUMN: */}
           <div className="md:col-span-3 md:pl-8">
             <h4 className="text-white font-bold text-lg mb-6">Quick Links</h4>
             <ul className="space-y-3">
@@ -92,7 +93,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* RIGHT COLUMN: CONTACT (Span 4 cols) */}
+          {/* RIGHT COLUMN: CONTACT  */}
           <div className="md:col-span-4">
             <h4 className="text-white font-bold text-lg mb-6">Get In Touch</h4>
             

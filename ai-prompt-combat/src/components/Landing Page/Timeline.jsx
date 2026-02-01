@@ -88,7 +88,7 @@ const Timeline = () => {
         {/* CARDS CONTAINER */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
           
-          {/* CONNECTING LINE (Desktop Only) */}
+          {/* CONNECTING LINE */}
           <div className="hidden lg:block absolute top-12 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-primary/30 to-transparent -z-10" />
 
           {steps.map((step, index) => (

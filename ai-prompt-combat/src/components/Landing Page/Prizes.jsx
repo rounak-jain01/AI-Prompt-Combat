@@ -6,7 +6,7 @@ const Prizes = () => {
   return (
     <section className="relative py-24 bg-dark overflow-hidden">
       
-      {/* Background - Static Glow (Performance Friendly) */}
+      {/* Background  */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-[#FFD700]/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
@@ -21,7 +21,7 @@ const Prizes = () => {
           </h2>
         </div>
 
-        {/* CROWN ICON (Center Top) */}
+        {/* CROWN ICON  */}
         <div className="flex justify-center -mb-5 relative z-20">
              <motion.div 
                animate={{ y: [0, -5, 0] }}
@@ -125,7 +125,7 @@ const Prizes = () => {
 
         </div>
 
-        {/* BOTTOM STRIP (For All Participants) */}
+        {/* BOTTOM STRIP */}
         <div className="max-w-4xl mx-auto">
           <div className="rounded-2xl bg-[#111] border border-white/10 p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
             

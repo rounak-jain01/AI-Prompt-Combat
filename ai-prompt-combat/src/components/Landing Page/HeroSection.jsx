@@ -2,14 +2,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Zap, Trophy, Users, ArrowRight } from "lucide-react";
 
-// Images Import
 import bannerImage from "../../assets/banner.jpg";
 import logo from "../../assets/Kagglelogo.png";
 import kalasarthiBadge from "../../assets/kalasarthiBadge.jpg";
 
 const HeroSection = () => {
   return (
-    // 'h-screen' ensure karega ki ye laptop screen height se bada na ho
     <section className="mt-5 relative h-screen min-h-150 flex items-center justify-center overflow-hidden bg-dark pt-16">
       
       {/* 1. BACKGROUND BANNER ANIMATION */}
@@ -27,7 +25,7 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-linear-to-b from-black via-black/80 to-black" />
       </div>
 
-      {/* GLOW EFFECTS (Thoda adjust kiya size taaki over-power na kare) */}
+      {/* GLOW EFFECTS */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 bg-primary rounded-full blur-[100px] opacity-15 pointer-events-none z-0" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-50 h-50 bg-[#FFD700] rounded-full blur-[80px] opacity-25 mix-blend-screen pointer-events-none z-0" />
 
@@ -47,7 +45,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           
-          {/* LOGOS SECTION (Size reduced) */}
+          {/* LOGOS SECTION  */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -63,7 +61,7 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          {/* MAIN TITLE (Compacted Font Sizes) */}
+          {/* MAIN TITLE */}
           <motion.h1
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -73,7 +71,6 @@ const HeroSection = () => {
             <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               AI
             </span>
-            {/* Gap added for spacing */}
             <span className="hidden md:inline"> </span>
             <span className="text-4xl md:text-6xl lg:text-7xl gold-text text-glow block md:inline drop-shadow-[0_0_30px_rgba(212,175,55,0.6)]">
               PROMPT
@@ -84,7 +81,7 @@ const HeroSection = () => {
             </span>
           </motion.h1>
 
-          {/* Tagline (Spacing reduced) */}
+          {/* Tagline  */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -94,7 +91,7 @@ const HeroSection = () => {
             Where Creativity Meets <span className="text-primary font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">Precision</span>
           </motion.p>
 
-          {/* BUTTONS (Margin reduced) */}
+          {/* BUTTONS  */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -109,7 +106,7 @@ const HeroSection = () => {
             </a>
           </motion.div>
 
-          {/* STATS GRID (Compact Padding) */}
+          {/* STATS GRID  */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
