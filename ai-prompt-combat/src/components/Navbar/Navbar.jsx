@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Sparkles, ChevronRight, LayoutDashboard, LogIn } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; // Context Import zaroori hai
+import { Menu, X, Sparkles, ChevronRight, LayoutDashboard, LogIn, LogOut, Trophy } from 'lucide-react'; // Added Trophy & LogOut
+import { useAuthState } from "react-firebase-hooks/auth"; 
+// import { auth } from "../../context/firebase"; 
+import { auth } from "../../firebase";
+import { useAuth } from '../../context/AuthContext'; 
+import { signOut } from "firebase/auth"; 
 
 const Navbar = () => {
+  const [user] = useAuthState(auth);
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { currentUser } = useAuth(); // User ka status check karne ke liye
+  const { currentUser } = useAuth(); 
   const navigate = useNavigate();
 
-  // Scroll hone par Navbar ka background change hoga
+  // Scroll Effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -18,7 +23,18 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Navigation Links
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/'); 
+      setIsOpen(false); 
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
+  // Base Navigation Links
   const navLinks = [
     { name: 'Home', href: '/#home' },
     { name: 'About', href: '/#about' },
@@ -42,7 +58,7 @@ const Navbar = () => {
             
             {/* === LOGO === */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-[#8a6e15] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-[#8a6e15] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <span className="text-white font-bold text-lg tracking-wide hidden md:block group-hover:text-primary transition-colors">
@@ -61,27 +77,47 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
+
+              {/* ✅ LEADERBOARD LINK (Only if Logged In) */}
+              {currentUser && (
+                <Link 
+                    to="/leaderboard" // Make sure this route exists in App.js
+                    className="flex items-center gap-2 text-sm font-medium text-[#D4AF37] hover:text-white transition-colors relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-white after:transition-all hover:after:w-full"
+                >
+                    <Trophy size={16} /> Leaderboard
+                </Link>
+              )}
             </div>
 
-            {/* === ACTION BUTTON (Dynamic Logic) === */}
+            {/* === ACTION BUTTONS (Desktop) === */}
             <div className="hidden lg:block">
               {currentUser ? (
-                // STATE 1: USER LOGGED IN -> Show Dashboard
-                <Link to="/lobby">
-                  <button className="px-6 py-2.5 rounded-xl bg-primary text-black font-bold text-sm hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-                    Go to Dashboard <LayoutDashboard size={16} />
-                  </button>
-                </Link>
+                <div className="flex items-center gap-4">
+                    {/* Dashboard Button */}
+                    <Link to="/lobby">
+                        <button className="cursor-pointer px-6 py-2.5 rounded-xl bg-primary text-black font-bold text-sm hover:bg-black hover:text-primary border-2 border-primary hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                            Dashboard <LayoutDashboard size={16} />
+                        </button>
+                    </Link>
+                    
+                    {/* ✅ LOGOUT BUTTON */}
+                    <button 
+                        onClick={handleLogout}
+                        className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:border-red-500/50 hover:bg-red-500/10 transition-all cursor-pointer"
+                        title="Logout"
+                    >
+                        <LogOut size={20} />
+                    </button>
+                </div>
               ) : (
-                // STATE 2: USER LOGGED OUT -> Show Register
                 <div className="flex items-center gap-4">
                     <Link to="/login" className="text-sm font-bold text-gray-300 hover:text-white transition-colors">
                         Login
                     </Link>
                     <Link to="/register">
-                    <button className="px-6 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-sm hover:bg-primary hover:text-black hover:border-primary transition-all flex items-center gap-2">
-                        Register Now <ChevronRight size={16} />
-                    </button>
+                        <button className="px-6 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-sm hover:bg-primary hover:text-black hover:border-primary transition-all flex items-center gap-2">
+                            Register Now <ChevronRight size={16} />
+                        </button>
                     </Link>
                 </div>
               )}
@@ -114,27 +150,48 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
+              
+              {/* ✅ MOBILE LEADERBOARD LINK */}
+              {currentUser && (
+                  <Link 
+                    to="/leaderboard"
+                    onClick={() => setIsOpen(false)}
+                    className="text-2xl font-bold text-[#D4AF37] hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    <Trophy size={24} /> Leaderboard
+                  </Link>
+              )}
             </div>
 
             {/* Mobile Action Buttons */}
             <div className="w-full max-w-xs flex flex-col gap-4">
               {currentUser ? (
-                <Link to="/lobby" onClick={() => setIsOpen(false)}>
-                  <button className="w-full py-4 rounded-xl bg-primary text-black font-bold text-lg shadow-lg flex items-center justify-center gap-2">
-                    <LayoutDashboard size={20} /> Dashboard
-                  </button>
-                </Link>
+                <>
+                    <Link to="/lobby" onClick={() => setIsOpen(false)}>
+                        <button className="w-full py-4 rounded-xl bg-primary text-black font-bold text-lg shadow-lg flex items-center justify-center gap-2">
+                            <LayoutDashboard size={20} /> Dashboard
+                        </button>
+                    </Link>
+                    
+                    {/* ✅ MOBILE LOGOUT BUTTON */}
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 font-bold text-lg flex items-center justify-center gap-2 transition-all"
+                    >
+                        Logout <LogOut size={20} />
+                    </button>
+                </>
               ) : (
                 <>
                     <Link to="/register" onClick={() => setIsOpen(false)}>
-                    <button className="w-full py-4 rounded-xl bg-primary text-black font-bold text-lg shadow-lg flex items-center justify-center gap-2">
-                        Register Now <ChevronRight size={20} />
-                    </button>
+                        <button className="w-full py-4 rounded-xl bg-primary text-black font-bold text-lg shadow-lg flex items-center justify-center gap-2">
+                            Register Now <ChevronRight size={20} />
+                        </button>
                     </Link>
                     <Link to="/login" onClick={() => setIsOpen(false)}>
-                    <button className="w-full py-4 rounded-xl bg-[#111] border border-white/20 text-white font-bold text-lg flex items-center justify-center gap-2">
-                        Login <LogIn size={20} />
-                    </button>
+                        <button className="w-full py-4 rounded-xl bg-[#111] border border-white/20 text-white font-bold text-lg flex items-center justify-center gap-2">
+                            Login <LogIn size={20} />
+                        </button>
                     </Link>
                 </>
               )}

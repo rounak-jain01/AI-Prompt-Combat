@@ -1,0 +1,12 @@
+# Python Backend Ignored Files
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/scores.json
+backend/serviceAccountKey.json
+# React Frontend Ignored Files
+node_modules/
+dist/
+build/
+.DS_Store

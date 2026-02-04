@@ -20,10 +20,8 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: Linkedin, href: "#", color: "#0077B5" },
-    { icon: Twitter, href: "#", color: "#1DA1F2" },
-    { icon: Instagram, href: "#", color: "#E1306C" },
-    { icon: Github, href: "#", color: "#ffffff" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/kaggle-koders/", color: "#0077B5" },
+    { icon: Instagram, href: "https://www.instagram.com/kaggle_koders_sistec?igsh=dTkxdWljdXNqdzFx", color: "#E1306C" },
   ];
 
   return (
@@ -107,7 +105,7 @@ const Footer = () => {
               </div>
               <div>
                 <span className="block text-xs text-gray-400 uppercase tracking-wider group-hover:text-primary">Email Us</span>
-                <span className="block text-sm md:text-base font-medium text-white">contact@kagglekoders.com</span>
+                <span className="block text-sm md:text-base font-medium text-white">kagglekoders@gmail.com</span>
               </div>
               <ArrowUpRight size={18} className="ml-auto text-gray-500 group-hover:text-primary group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform duration-300" />
             </a>

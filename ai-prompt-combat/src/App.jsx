@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Lobby from "./pages/Lobby";
 import Round1Rules from "./pages/Round1Rules";
 import Round1 from "./pages/Round1";
+import LeaderboardDashboard from './pages/LeaderboardDashboard';
 
 // Layout Component for Pages WITH Navbar
 const LayoutWithNavbar = ({ children }) => (
@@ -36,7 +37,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#050505] text-white selection:bg-[#FFD700] selection:text-black">
+      <div className="min-h-screen bg-dark text-white selection:bg-[#FFD700] selection:text-black">
         <Toaster
           position="top-center"
           reverseOrder={false}
@@ -77,6 +78,7 @@ function App() {
           <Route path="/register" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/round-1/game" element={<Round1 />} />{" "}
+          <Route path="/leaderboard" element={<LeaderboardDashboard />} />
           {/* No Navbar Here */}
         </Routes>
       </div>

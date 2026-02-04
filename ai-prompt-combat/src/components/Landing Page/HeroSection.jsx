@@ -23,8 +23,8 @@ const HeroSection = () => {
           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
           style={{ willChange: "transform" }}
         >
-          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-50" />
-          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-50" />
+          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-80" />
+          <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-80" />
         </motion.div>
         <div className="absolute inset-0 bg-linear-to-b from-black via-black/80 to-black" />
       </div>
@@ -73,11 +73,11 @@ const HeroSection = () => {
             className="font-display font-black uppercase tracking-tighter leading-none drop-shadow-2xl mb-4"
           >
             <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-              AI
+              A.I.
             </span>
-            <span className="hidden md:inline"> </span>
+            <span className="hidden md:inline"></span>
             <span className="text-4xl md:text-6xl lg:text-7xl gold-text text-glow block md:inline drop-shadow-[0_0_30px_rgba(212,175,55,0.6)]">
-              PROMPT
+               PROMPT
             </span>
             <br className="hidden md:block" />
             <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline mt-1 md:mt-0">

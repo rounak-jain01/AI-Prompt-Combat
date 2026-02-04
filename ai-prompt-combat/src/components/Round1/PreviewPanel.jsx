@@ -1,105 +1,89 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minimize2 } from 'lucide-react';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Trophy, AlertCircle } from "lucide-react";
 
-/**
- * Slide-in panel showing "Generated Preview" mock.
- * UI only: placeholder image + loading shimmer state.
- */
-export default function PreviewPanel({ isOpen, onClose, isLoading = false, isMinimized, onMinimize }) {
+export default function PreviewPanel({
+  isOpen,
+  onClose,
+  score,
+  feedback,
+  attemptsLeft,
+}) {
+  // Score Color Logic
+  const getColor = (s) =>
+    s >= 80 ? "text-green-500" : s >= 50 ? "text-[#D4AF37]" : "text-red-500";
+  const getBorder = (s) =>
+    s >= 80
+      ? "border-green-500"
+      : s >= 50
+        ? "border-[#D4AF37]"
+        : "border-red-500";
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.aside
-          initial={{ x: '100%' }}
+          initial={{ x: "100%" }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 28, stiffness: 200 }}
-          className={`
-            fixed top-0 right-0 z-[60] h-full
-            bg-[#0a0a0a]/95 backdrop-blur-xl border-l border-white/10
-            shadow-[-20px_0_60px_rgba(0,0,0,0.5)]
-            flex flex-col
-            ${isMinimized ? 'w-20' : 'w-full max-w-md'}
-          `}
+          exit={{ x: "100%" }}
+          className="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-[#0a0a0a]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl p-6 flex flex-col"
         >
-          {!isMinimized ? (
-            <>
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <h3 className="font-display font-bold text-lg text-primary">Generated Preview</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onMinimize}
-                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                    aria-label="Minimize"
-                  >
-                    <Minimize2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/15 text-primary border-2 border-primary/50 hover:bg-primary/25 hover:border-primary hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all"
-                    aria-label="Close panel"
-                  >
-                    <X className="w-5 h-5" strokeWidth={2.5} />
-                    <span className="text-sm font-bold">Close</span>
-                  </button>
-                </div>
-              </div>
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Trophy className="text-primary" /> Analysis Report
+            </h3>
+            <button
+              onClick={onClose}
+              className="p-2 cursor-pointer bg-white/5 rounded-lg hover:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-              {/* Content */}
-              <div className="flex-1 p-4 overflow-auto">
-                {isLoading ? (
-                  /* Shimmer skeleton */
-                  <div className="rounded-xl overflow-hidden bg-[#111] border border-white/10">
-                    <div className="aspect-square w-full shimmer-box" />
-                    <div className="p-3 space-y-2">
-                      <div className="h-3 w-3/4 rounded bg-white/10 animate-pulse" />
-                      <div className="h-3 w-1/2 rounded bg-white/10 animate-pulse" />
-                    </div>
-                  </div>
-                ) : (
-                  /* Placeholder output mock */
-                  <div className="rounded-xl overflow-hidden bg-[#111] border border-primary/20">
-                    <div className="aspect-square w-full bg-[#0d0d0d] flex items-center justify-center">
-                      <div className="text-center p-6">
-                        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
-                          <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-                          </svg>
-                        </div>
-                        <p className="text-sm text-gray-500">Preview (UI mock)</p>
-                        <p className="text-xs text-gray-600 mt-1">No actual generation</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center py-4 gap-2">
-              <span className="text-xs text-primary font-semibold uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Preview</span>
-              <button
-                type="button"
-                onClick={onMinimize}
-                className="p-2 rounded-lg text-gray-400 hover:text-primary transition-colors"
-                aria-label="Expand"
+          {/* SCORE CIRCLE */}
+          <div className="flex flex-col items-center justify-center mb-8">
+            <div
+              className={`w-32 h-32 rounded-full border-4 ${getBorder(score)} flex items-center justify-center bg-white/5 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
+            >
+              <span
+                className={`text-4xl font-bold font-mono ${getColor(score)}`}
               >
-                <Minimize2 className="w-5 h-5 rotate-90" />
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-2.5 rounded-xl bg-primary/15 text-primary border-2 border-primary/50 hover:bg-primary/25 hover:border-primary transition-all"
-                aria-label="Close panel"
-                title="Close"
-              >
-                <X className="w-5 h-5" strokeWidth={2.5} />
-              </button>
+                {score}%
+              </span>
             </div>
-          )}
+            <p className="mt-4 text-gray-400 text-sm uppercase tracking-widest">
+              Accuracy Score
+            </p>
+          </div>
+
+          {/* INSIGHTS */}
+          <div className="flex-1 bg-[#111] rounded-xl p-5 border border-white/10">
+            <h4 className="text-primary font-bold mb-4 flex items-center gap-2">
+              <AlertCircle size={16} /> AI Insights
+            </h4>
+            <ul className="space-y-3">
+              {feedback.map((tip, index) => (
+                <li key={index} className="text-sm text-gray-300 flex gap-2">
+                  <span className="text-primary">•</span> {tip}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* FOOTER */}
+          <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <p className="text-gray-500 text-sm">
+              Attempts Remaining:{" "}
+              <span className="text-white font-bold">{attemptsLeft}/5</span>
+            </p>
+            <button
+              onClick={onClose}
+              className=" cursor-pointer mt-4 w-full py-3 bg-primary text-black font-bold rounded-lg hover:bg-[#b8952b]"
+            >
+              Improve Prompt & Try Again
+            </button>
+          </div>
         </motion.aside>
       )}
     </AnimatePresence>

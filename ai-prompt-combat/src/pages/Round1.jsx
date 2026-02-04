@@ -1,169 +1,569 @@
-import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
+import React, { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import { getAuth } from "firebase/auth"; // ✅ Added Firebase Auth
+import {
+  AlertTriangle,
+  Lock,
+  Save,
+  Sparkles,
+  Clock,
+  X,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import TopBar from '../components/Round1/TopBar';
-import ImageCard from '../components/Round1/ImageCard';
-import PromptEditor from '../components/Round1/PromptEditor';
-import PreviewPanel from '../components/Round1/PreviewPanel';
-import NavigationControls from '../components/Round1/NavigationControls';
+import TopBar from "../components/Round1/TopBar";
+import ImageCard from "../components/Round1/ImageCard";
+import PromptEditor from "../components/Round1/PromptEditor";
+import PreviewPanel from "../components/Round1/PreviewPanel";
+import NavigationControls from "../components/Round1/NavigationControls";
 
 const TOTAL_PAIRS = 5;
+const TIME_LIMIT_SECONDS = 25 * 60; // 25 Minutes
 
-// Mock image pairs (placeholder URLs – UI only)
-const IMAGE_PAIRS = Array.from({ length: TOTAL_PAIRS }, (_, i) => ({
-  id: i + 1,
-  input: `https://picsum.photos/seed/round1input${i + 1}/640/480`,
-  target: `https://picsum.photos/seed/round1target${i + 1}/640/480`,
-}));
+const IMAGE_PAIRS = [
+  {
+    id: 1,
+    input: "/Round1Images/Case1/input.png",
+    target: "/Round1Images/Case1/target.png",
+  },
+  {
+    id: 2,
+    input: "/Round1Images/Case2/input.png",
+    target: "/Round1Images/Case2/target.png",
+  },
+  {
+    id: 3,
+    input: "/Round1Images/Case3/input.png",
+    target: "/Round1Images/Case3/target.png",
+  },
+  {
+    id: 4,
+    input: "/Round1Images/Case4/input.png",
+    target: "/Round1Images/Case4/target.png",
+  },
+  {
+    id: 5,
+    input: "/Round1Images/Case5/input.png",
+    target: "/Round1Images/Case5/target.png",
+  },
+];
+
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+};
 
 export default function Round1() {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [prompts, setPrompts] = useState(() => Array(TOTAL_PAIRS).fill(''));
-  const [saved, setSaved] = useState(() => Array(TOTAL_PAIRS).fill(false));
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewMinimized, setPreviewMinimized] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [showAutoSave, setShowAutoSave] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
+  const [prompts, setPrompts] = useState(() => Array(TOTAL_PAIRS).fill(""));
 
-  const pair = IMAGE_PAIRS[currentIndex];
-  const currentPrompt = prompts[currentIndex] ?? '';
-  const currentSaved = saved[currentIndex] ?? false;
-
-  const setCurrentPrompt = useCallback(
-    (value) => {
-      setPrompts((prev) => {
-        const next = [...prev];
-        next[currentIndex] = value;
-        return next;
-      });
-    },
-    [currentIndex]
+  const [pairStatus, setPairStatus] = useState(() =>
+    Array.from({ length: TOTAL_PAIRS }, () => ({
+      attemptsLeft: 5,
+      lastScore: 0,
+      bestScore: 0,
+      bestPromptText: "",
+      feedback: [],
+      isLocked: false,
+      finalSelectedPrompt: "",
+      finalSelectedScore: 0,
+    })),
   );
 
-  const handleCheckPrompt = useCallback(() => {
-    setPreviewLoading(true);
-    setPreviewOpen(true);
-    toast.loading('Generating preview…', { id: 'preview' });
-    setTimeout(() => {
-      setPreviewLoading(false);
-      toast.success('Preview opened (UI only)', { id: 'preview', icon: '✨' });
-    }, 1500);
-  }, []);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSavePrompt = useCallback(() => {
-    if (!currentPrompt.trim()) return;
-    setSaved((prev) => {
-      const next = [...prev];
-      next[currentIndex] = true;
-      return next;
+  // --- MODAL STATES ---
+  const [showLockModal, setShowLockModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitModalContent, setSubmitModalContent] = useState({
+    title: "",
+    message: "",
+    isWarning: false,
+  });
+
+  const pair = IMAGE_PAIRS[currentIndex];
+  const currentStatus = pairStatus[currentIndex];
+  const currentPrompt = prompts[currentIndex] || "";
+
+  // --- TIMER EFFECT ---
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      handleAutoSubmit();
+      return;
+    }
+    const timerId = setInterval(() => setTimeLeft((p) => p - 1), 1000);
+    return () => clearInterval(timerId);
+  }, [timeLeft]);
+
+  // --- CHECK PROMPT ---
+  const handleCheckPrompt = useCallback(async () => {
+    if (!currentPrompt.trim()) return toast.error("Prompt cannot be empty!");
+    if (currentStatus.attemptsLeft <= 0)
+      return toast.error("Attempts exhausted! Please lock answer.");
+
+    setChecking(true);
+    const toastId = toast.loading("Judging...");
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: currentPrompt, pairId: pair.id }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setPairStatus((prev) => {
+          const newStatus = [...prev];
+          const current = { ...newStatus[currentIndex] };
+
+          current.attemptsLeft -= 1;
+          current.lastScore = data.score;
+          current.feedback = data.feedback;
+
+          if (data.score >= current.bestScore) {
+            current.bestScore = data.score;
+            current.bestPromptText = currentPrompt;
+          }
+
+          newStatus[currentIndex] = current;
+          return newStatus;
+        });
+        toast.success(`Score: ${data.score}%`, { id: toastId });
+        setPreviewOpen(true);
+      }
+    } catch (error) {
+      toast.error("Backend Error", { id: toastId });
+    } finally {
+      setChecking(false);
+    }
+  }, [currentPrompt, currentIndex, pair, currentStatus]);
+
+  // --- LOCK HANDLER ---
+  const handleLockClick = () => {
+    if (!currentPrompt.trim() && !currentStatus.bestPromptText) {
+      return toast.error("Write something first!");
+    }
+    if (currentStatus.bestScore > 0) {
+      setShowLockModal(true);
+    } else {
+      confirmLock("current");
+    }
+  };
+
+  // --- CONFIRM LOCK ---
+  const confirmLock = (choice) => {
+    setPairStatus((prev) => {
+      const newStatus = [...prev];
+      const current = { ...newStatus[currentIndex] };
+
+      if (choice === "best") {
+        current.finalSelectedPrompt = current.bestPromptText;
+        current.finalSelectedScore = current.bestScore;
+        setPrompts((p) => {
+          const n = [...p];
+          n[currentIndex] = current.bestPromptText;
+          return n;
+        });
+      } else {
+        current.finalSelectedPrompt = prompts[currentIndex];
+        const isBestText = prompts[currentIndex] === current.bestPromptText;
+        current.finalSelectedScore = isBestText
+          ? current.bestScore
+          : current.lastScore;
+      }
+
+      current.isLocked = true;
+      newStatus[currentIndex] = current;
+      return newStatus;
     });
-    toast.success('Prompt saved', { icon: '✓' });
-  }, [currentIndex, currentPrompt]);
 
-  const goTo = useCallback((index) => {
-    if (index === currentIndex) return;
-    setShowAutoSave(true);
-    const t = setTimeout(() => setShowAutoSave(false), 2000);
-    setCurrentIndex(index);
-    return () => clearTimeout(t);
-  }, [currentIndex]);
+    setShowLockModal(false);
+    toast.success("Locked!", { icon: "🔒" });
+  };
 
-  const handlePrev = useCallback(() => {
-    if (currentIndex > 0) goTo(currentIndex - 1);
-  }, [currentIndex, goTo]);
+  // --- SUBMIT LOGIC (Updated for Firebase Auth) ---
+  const sendToBackend = async (dataPayload, message, toastId) => {
+    const total = dataPayload.reduce((acc, item) => acc + item.score, 0);
+    const avg = (total / TOTAL_PAIRS).toFixed(2);
 
-  const handleNext = useCallback(() => {
-    if (currentIndex < TOTAL_PAIRS - 1) goTo(currentIndex + 1);
-  }, [currentIndex, goTo]);
+    try {
+      // ✅ 1. Get User & Token
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        toast.error("You must be logged in to submit!", { id: toastId });
+        setSubmitting(false);
+        return;
+      }
+
+      const token = await user.getIdToken(); // 🔑 Generate Token
+
+      // ✅ 2. Send Token in Headers
+      // ✅ USER NAME NIKALO (Fallback to 'Anonymous' if empty)
+      const userName =
+        user.displayName || user.email.split("@")[0] || "Unknown Agent";
+      const response = await fetch("http://127.0.0.1:5000/api/submit-round", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Secure Header
+        },
+        body: JSON.stringify({
+          averageScore: parseFloat(avg),
+          totalPairs: TOTAL_PAIRS,
+          breakdown: dataPayload,
+          username: userName,
+          // userId backend khud token se nikalega
+        }),
+      });
+
+      const resData = await response.json();
+      if (resData.success) {
+        toast.success(message, { id: toastId });
+        setTimeout(() => navigate("/lobby"), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Submission Failed", { id: toastId });
+      setSubmitting(false);
+    }
+  };
+
+  // --- TRIGGER SUBMIT MODAL ---
+  const handleManualSubmitClick = () => {
+    const allLocked = pairStatus.every((p) => p.isLocked);
+
+    if (!allLocked) {
+      setSubmitModalContent({
+        title: "Incomplete Submission",
+        message:
+          "Some answers are NOT locked. We will automatically use your highest score for unlocked cases. Are you sure you want to submit?",
+        isWarning: true,
+      });
+    } else {
+      setSubmitModalContent({
+        title: "Confirm Submission",
+        message:
+          "Are you sure you want to submit your final answers for this round?",
+        isWarning: false,
+      });
+    }
+    setShowSubmitModal(true);
+  };
+
+  // --- EXECUTE SUBMIT ---
+  const executeSubmit = () => {
+    setShowSubmitModal(false);
+    setSubmitting(true);
+    const tId = toast.loading("Securely Submitting...");
+
+    const payload = pairStatus.map((p, idx) => ({
+      pairId: idx + 1,
+      score: p.isLocked ? p.finalSelectedScore : p.bestScore,
+      prompt: p.isLocked
+        ? p.finalSelectedPrompt
+        : p.bestPromptText || prompts[idx],
+    }));
+
+    sendToBackend(payload, "Submitted Successfully!", tId);
+  };
+
+  const handleAutoSubmit = () => {
+    setSubmitting(true);
+    const tId = toast.loading("Time Up! Auto-submitting...");
+    const payload = pairStatus.map((p, idx) => ({
+      pairId: idx + 1,
+      score: p.bestScore,
+      prompt: p.bestPromptText || prompts[idx],
+    }));
+    sendToBackend(payload, "Auto-Submitted!", tId);
+  };
+
+  // --- RENDER ---
+  if (!pair || !currentStatus)
+    return <div className="text-white p-10">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      {/* Subtle grid background */}
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col relative overflow-hidden selection:bg-[#D4AF37] selection:text-black">
+      {/* Background Ambience */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03] z-0"
+        className="fixed inset-0 pointer-events-none opacity-[0.03]"
         style={{
-          backgroundImage: `
-            linear-gradient(rgba(212,175,55,0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(212,175,55,0.15) 1px, transparent 1px)
-          `,
-          backgroundSize: '48px 48px',
+          backgroundImage: `linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)`,
+          backgroundSize: "48px 48px",
         }}
       />
 
-      <TopBar currentPairIndex={currentIndex} totalPairs={TOTAL_PAIRS} />
+      {/* === LOCK SELECTION MODAL === */}
+      <AnimatePresence>
+        {showLockModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#111] border border-[#D4AF37] rounded-xl p-6 w-full max-w-lg relative shadow-[0_0_50px_rgba(212,175,55,0.15)]"
+            >
+              <button
+                onClick={() => setShowLockModal(false)}
+                className="absolute cursor-pointer top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <X />
+              </button>
+              <h3 className="text-xl font-bold text-[#D4AF37] mb-4 flex gap-2 items-center">
+                <Lock size={20} /> Select Answer to Lock
+              </h3>
 
-      <main className="flex-1 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8">
-        {/* Image comparison section – equal height cards, smooth pair transition */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-          <AnimatePresence mode="wait">
-            <ImageCard
-              key={`input-${currentIndex}`}
-              label="Input Image"
-              src={pair.input}
-              isTarget={false}
-              alt={`Input pair ${currentIndex + 1}`}
-            />
-            <ImageCard
-              key={`target-${currentIndex}`}
-              label="Target Output Image"
-              src={pair.target}
-              isTarget
-              alt={`Target pair ${currentIndex + 1}`}
-            />
-          </AnimatePresence>
+              <div className="space-y-4">
+                <button
+                  onClick={() => confirmLock("best")}
+                  className="cursor-pointer w-full text-left p-4 rounded-lg bg-gradient-to-r from-green-900/20 to-transparent border border-green-500/50 hover:border-green-400 transition-all group"
+                >
+                  <div className="flex justify-between items-center font-bold text-green-400 mb-1">
+                    <span className="flex items-center gap-2">
+                      <TrophyIcon size={16} /> Best Attempt
+                    </span>
+                    <span className="bg-green-500/20 px-2 py-0.5 rounded text-sm border border-green-500/50">
+                      {currentStatus.bestScore}%
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-xs italic line-clamp-2 border-t border-green-500/20 pt-2 mt-2 group-hover:text-green-200">
+                    {currentStatus.bestPromptText}
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => confirmLock("current")}
+                  className="cursor-pointer w-full text-left p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/30 transition-all group"
+                >
+                  <div className="flex justify-between items-center font-bold text-white mb-1">
+                    <span className="flex items-center gap-2">
+                      <Sparkles size={16} /> Current Editor Text
+                    </span>
+                    <span className="text-gray-500 text-xs border border-white/10 px-2 py-0.5 rounded">
+                      Unchecked
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-xs italic line-clamp-2 border-t border-white/10 pt-2 mt-2 group-hover:text-gray-300">
+                    {currentPrompt}
+                  </p>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* === SUBMIT CONFIRMATION MODAL === */}
+      <AnimatePresence>
+        {showSubmitModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className={`bg-[#0a0a0a] border rounded-xl p-8 w-full max-w-md relative shadow-2xl ${
+                submitModalContent.isWarning
+                  ? "border-red-500/50"
+                  : "border-[#D4AF37]/50"
+              }`}
+            >
+              <div
+                className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  submitModalContent.isWarning
+                    ? "bg-red-500/10 text-red-500"
+                    : "bg-[#D4AF37]/10 text-[#D4AF37]"
+                }`}
+              >
+                {submitModalContent.isWarning ? (
+                  <AlertTriangle size={32} />
+                ) : (
+                  <CheckCircle size={32} />
+                )}
+              </div>
+
+              <h3 className="text-2xl font-bold text-white text-center mb-2">
+                {submitModalContent.title}
+              </h3>
+              <p className="text-gray-400 text-center text-sm leading-relaxed mb-8">
+                {submitModalContent.message}
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSubmitModal(false)}
+                  className="cursor-pointer flex-1 py-3 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 font-bold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeSubmit}
+                  className={`cursor-pointer flex-1 py-3 rounded-lg font-bold text-black transition-all ${
+                    submitModalContent.isWarning
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-[#D4AF37] hover:bg-[#b8952b]"
+                  }`}
+                >
+                  Confirm Submit
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* === HEADER === */}
+      <div className="sticky top-0 z-40 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 px-6 py-3 flex items-center justify-between shadow-lg">
+        <div className="flex-1">
+          <TopBar
+            currentPairIndex={currentIndex}
+            totalPairs={TOTAL_PAIRS}
+            timeLeft={timeLeft}
+          />
+        </div>
+
+        <div className="flex items-center gap-4 pl-6 border-l border-white/10 ml-4">
+          <div className="text-right hidden md:block">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+              Remaining
+            </p>
+            <p className="text-xs text-[#D4AF37] font-bold">Round 01</p>
+          </div>
+          <div
+            className={`flex items-center gap-3 px-5 py-2 rounded-lg border font-mono text-2xl font-bold tracking-widest transition-all ${
+              timeLeft < 60
+                ? "bg-red-950/30 border-red-500 text-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                : "bg-black/40 border-[#D4AF37]/30 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.1)]"
+            }`}
+          >
+            <Clock size={24} />
+            {formatTime(timeLeft)}
+          </div>
+        </div>
+      </div>
+
+      <main className="flex-1 relative z-10 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <ImageCard label="Input" src={pair.input} isTarget={false} />
+          <ImageCard label="Target" src={pair.target} isTarget={true} />
         </section>
 
-        {/* Prompt panel – glassmorphic, clear workflow */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
+        <div className="flex justify-between px-2 text-sm font-bold">
+          <span className="flex items-center gap-2 text-[#D4AF37]">
+            <AlertTriangle size={16} /> Attempts: {currentStatus.attemptsLeft}/5
+          </span>
+          {currentStatus.isLocked && (
+            <span className="flex items-center gap-2 text-gray-400">
+              <Lock size={14} /> LOCKED
+            </span>
+          )}
+        </div>
+
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-white/10 bg-[#0a0a0a]/70 backdrop-blur-xl p-5 sm:p-6 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]"
+          className={`rounded-2xl border bg-[#111]/80 p-6 backdrop-blur-xl ${
+            currentStatus.isLocked
+              ? "border-green-500/30 pointer-events-none opacity-80"
+              : "border-white/10"
+          }`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Your prompt</p>
           <PromptEditor
             value={currentPrompt}
-            onChange={setCurrentPrompt}
-            onCheckPrompt={handleCheckPrompt}
-            onSavePrompt={handleSavePrompt}
-            isSaved={currentSaved}
+            onChange={(val) =>
+              !currentStatus.isLocked &&
+              setPrompts((p) => {
+                const n = [...p];
+                n[currentIndex] = val;
+                return n;
+              })
+            }
           />
-        </motion.section>
+          <div className="flex gap-3 mt-4 pt-4 border-t border-white/10">
+            <button
+              onClick={handleCheckPrompt}
+              disabled={
+                checking ||
+                currentStatus.isLocked ||
+                currentStatus.attemptsLeft <= 0
+              }
+              className="cursor-pointer px-6 py-2.5 bg-[#D4AF37] text-black font-bold rounded-lg flex gap-2 items-center hover:bg-[#b8952b] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] disabled:opacity-50 transition-all"
+            >
+              {checking ? (
+                "Checking..."
+              ) : (
+                <>
+                  <Sparkles size={18} /> Check Accuracy
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleLockClick}
+              disabled={currentStatus.isLocked}
+              className="cursor-pointer px-6 py-2.5 border border-white/20 rounded-lg flex gap-2 items-center hover:bg-white/5 disabled:opacity-50 transition-all"
+            >
+              {currentStatus.isLocked ? (
+                <>
+                  <Lock size={18} /> Locked
+                </>
+              ) : (
+                <>
+                  <Save size={18} /> Lock Answer
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
 
-        {/* Navigation – fixed visual hierarchy */}
-        <section className="pt-2 pb-6 sm:pb-8">
-          <NavigationControls
-            currentIndex={currentIndex}
-            onPrev={handlePrev}
-            onNext={handleNext}
-            onGoTo={goTo}
-            showAutoSave={showAutoSave}
-          />
-        </section>
+        <NavigationControls
+          currentIndex={currentIndex}
+          onPrev={() => setCurrentIndex((i) => i - 1)}
+          onNext={() => setCurrentIndex((i) => i + 1)}
+          onGoTo={setCurrentIndex}
+          totalPairs={TOTAL_PAIRS}
+          onSubmit={handleManualSubmitClick}
+          isSubmitting={submitting}
+        />
       </main>
 
-      {/* Preview side panel */}
       <PreviewPanel
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        isLoading={previewLoading}
-        isMinimized={previewMinimized}
-        onMinimize={() => setPreviewMinimized((v) => !v)}
+        score={currentStatus.lastScore}
+        feedback={currentStatus.feedback}
+        attemptsLeft={currentStatus.attemptsLeft}
       />
-
-      {/* Backdrop: click anywhere outside panel to close (desktop + mobile) */}
-      {previewOpen && (
-        <motion.button
-          type="button"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30"
-          onClick={() => setPreviewOpen(false)}
-          aria-label="Close preview"
-        />
-      )}
     </div>
   );
 }
+
+const TrophyIcon = ({ size }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);

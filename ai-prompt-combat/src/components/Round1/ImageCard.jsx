@@ -41,10 +41,10 @@ export default function ImageCard({ label, src, isTarget = false, alt = '' }) {
       </div>
 
       {/* Image container - equal aspect, consistent height */}
-      <div className="relative aspect-[4/3] w-full min-h-[220px] sm:min-h-[260px] flex items-center justify-center">
+      <div className="relative cursor-pointer aspect-4/3 w-full min-h-55 sm:min-h-65 flex items-center justify-center">
         {/* Skeleton loader */}
         {!loaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#111] to-[#0a0a0a] animate-pulse" />
+          <div className="absolute inset-0 bg-linear-to-br from-[#111] to-[#0a0a0a] animate-pulse" />
         )}
         <motion.img
           src={src}
