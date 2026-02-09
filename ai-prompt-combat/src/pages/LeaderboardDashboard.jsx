@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Sparkles, ChevronLeft, Trophy, Loader2 } from "lucide-react";
 import { getAuth } from "firebase/auth"; // Auth import
 import Leaderboard from "../components/Round1/Leaderboard";
+import { API_BASE_URL } from "../config";
 
 export default function LeaderboardDashboard() {
 
@@ -19,7 +20,7 @@ export default function LeaderboardDashboard() {
   // --- FETCH DATA FUNCTION ---
   const fetchLeaderboard = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/leaderboard");
+      const response = await fetch(`${API_BASE_URL}/api/leaderboard`);
       const result = await response.json();
 
       if (result.success) {
