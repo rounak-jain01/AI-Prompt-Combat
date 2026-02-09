@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, Header, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer, util
+import requests
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- FIREBASE IMPORTS ---
 import firebase_admin
@@ -39,12 +41,13 @@ db = firestore.client() if firebase_admin._apps else None
 app = FastAPI()
 
 # CORS
+# 👇 2. Add Middleware (Yeh Code Paste Karein)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allows all origins (localhost, render, etc.)
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
 )
 
 # Load AI Model
@@ -154,28 +157,31 @@ def start_round(request: StartRoundRequest, userId: str = Depends(verify_token))
         print(f"Error starting round: {e}")
         raise HTTPException(status_code=500, detail="Database Error")
 
+# Updated Evaluate Route
 @app.post("/api/evaluate")
 def evaluate_prompt(request: EvaluateRequest):
-    target_prompt = TARGET_PROMPTS.get(request.pairId)
-    if not target_prompt:
-        raise HTTPException(status_code=404, detail="Invalid Pair ID")
+    # ✅ Aapka Sahi Hugging Face URL
+    AI_ENGINE_URL = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate" 
     
-    # Calculate Similarity
-    embeddings1 = model.encode(request.prompt, convert_to_tensor=True)
-    embeddings2 = model.encode(target_prompt, convert_to_tensor=True)
-    similarity_score = util.pytorch_cos_sim(embeddings1, embeddings2).item()
-    
-    final_score = round(similarity_score * 100)
-    if final_score < 0: final_score = 0
+    payload = {
+        "prompt": request.prompt,
+        "target": TARGET_PROMPTS.get(request.pairId, "")
+    }
 
-    # Generate Insights
-    feedback = []
-    if final_score >= 90: feedback = ["Perfect match!", "Excellent details caught."]
-    elif final_score >= 75: feedback = ["Great accuracy!", "Try refining lighting & texture."]
-    elif final_score >= 50: feedback = ["Good direction.", "You missed key style elements."]
-    else: feedback = ["Off track.", "Focus on the main subject and art style."]
-
-    return {"success": True, "score": final_score, "feedback": feedback}
+    try:
+        # Direct call to YOUR private server
+        response = requests.post(AI_ENGINE_URL, json=payload)
+        
+        # Check if request was successful
+        if response.status_code == 200:
+            return {"success": True, **response.json()}
+        else:
+            print(f"HF Error: {response.status_code} - {response.text}")
+            return {"success": False, "score": 0, "feedback": ["AI Engine Error"]}
+            
+    except Exception as e:
+        print(f"Connection Error: {e}")
+        return {"success": True, "score": 0, "feedback": ["Server Busy, try again in 2s"]}
 
 @app.post("/api/submit-round")
 def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_token)):
