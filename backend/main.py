@@ -1,11 +1,10 @@
 import os
 import json
 from datetime import datetime
+import requests  # ✅ Added for HF Space call
 from fastapi import FastAPI, HTTPException, Header, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import requests
-from fastapi.middleware.cors import CORSMiddleware
 
 # --- FIREBASE IMPORTS ---
 import firebase_admin
@@ -26,7 +25,7 @@ if not firebase_admin._apps:
             cred = credentials.Certificate("serviceAccountKey.json")
             print("✅ Firebase Loaded from Local File")
         else:
-            # Fallback (Run without DB if needed, but warn)
+            # Fallback
             print("⚠️ Warning: serviceAccountKey.json not found.")
             cred = None
 
@@ -39,8 +38,7 @@ db = firestore.client() if firebase_admin._apps else None
 # Init App
 app = FastAPI()
 
-# CORS
-# 👇 2. Add Middleware (Yeh Code Paste Karein)
+# 2. Add CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins (localhost, render, etc.)
@@ -49,10 +47,10 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Load AI Model
-print("🤖 Loading AI Judge Model...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
-print("✅ AI Judge Ready!")
+# ❌ REMOVED: Heavy Model Loading (Render will be happy now)
+# print("🤖 Loading AI Judge Model...")
+# model = SentenceTransformer('all-MiniLM-L6-v2') 
+# print("✅ AI Judge Ready!")
 
 # --- DATA MODELS ---
 
@@ -67,9 +65,11 @@ class RoundSubmissionRequest(BaseModel):
     username: str = "Unknown"
     isCheating: bool = False
 
-# ✅ NEW MODEL FOR START ROUND
 class StartRoundRequest(BaseModel):
     roundId: str
+
+class ResetUserRequest(BaseModel):
+    targetUserId: str
 
 # --- CONSTANTS ---
 TARGET_PROMPTS = {
@@ -80,7 +80,7 @@ TARGET_PROMPTS = {
     5: "Intricate 3D paper quilling art of a lion, layered paper strips with depth, vibrant colors, handmade craft texture, papercraft style, abstract artistic representation."
 }
 
-# --- HELPER FUNCTIONS (Ye sabse upar hone chahiye) ---
+# --- HELPER FUNCTIONS ---
 
 def verify_token(authorization: str = Header(...)):
     """
@@ -92,8 +92,6 @@ def verify_token(authorization: str = Header(...)):
             raise HTTPException(status_code=401, detail="Invalid Header Format")
         
         token = authorization.split("Bearer ")[1]
-        
-        # Verify Token with Firebase
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token['uid']
         return uid
@@ -101,8 +99,6 @@ def verify_token(authorization: str = Header(...)):
         print(f"Auth Error: {e}")
         raise HTTPException(status_code=401, detail="Invalid or Expired Token")
 
-
-# --- ADMIN SECURITY ---
 def verify_admin(userId: str = Depends(verify_token)):
     """
     Checks if the authenticated user has 'admin' role.
@@ -116,13 +112,13 @@ def verify_admin(userId: str = Depends(verify_token)):
         raise HTTPException(status_code=403, detail="🚫 Access Denied: Admins Only")
     
     return userId
+
 # --- ROUTES ---
 
 @app.get("/")
 def read_root():
     return {"status": "Backend is Running 🚀"}
 
-# ✅ START ROUND API (Security Step 1)
 @app.post("/api/start-round")
 def start_round(request: StartRoundRequest, userId: str = Depends(verify_token)):
     """
@@ -140,10 +136,6 @@ def start_round(request: StartRoundRequest, userId: str = Depends(verify_token))
             if data.get(f"{request.roundId}_status") == "submitted":
                  return {"success": False, "message": "Already submitted!"}
             
-            # Check agar pehle se started hai (Optional: Agar strict one-time entry chahiye)
-            # if data.get(f"{request.roundId}_status") == "started":
-            #      return {"success": False, "message": "You have already started this round!"}
-
             # Mark as started
             user_ref.update({
                 f"{request.roundId}_status": "started",
@@ -156,10 +148,10 @@ def start_round(request: StartRoundRequest, userId: str = Depends(verify_token))
         print(f"Error starting round: {e}")
         raise HTTPException(status_code=500, detail="Database Error")
 
-# Updated Evaluate Route
+# ✅ Updated Evaluate Route (Uses HF Space)
 @app.post("/api/evaluate")
 def evaluate_prompt(request: EvaluateRequest):
-    # ✅ Aapka Sahi Hugging Face URL
+    # 👇 Replace with YOUR HF Space URL
     AI_ENGINE_URL = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate" 
     
     payload = {
@@ -171,7 +163,6 @@ def evaluate_prompt(request: EvaluateRequest):
         # Direct call to YOUR private server
         response = requests.post(AI_ENGINE_URL, json=payload)
         
-        # Check if request was successful
         if response.status_code == 200:
             return {"success": True, **response.json()}
         else:
@@ -187,7 +178,6 @@ def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_t
     print(f"📥 Processing Submission for UserUID: {userId} | Cheating: {request.isCheating}")
     
     try:
-        # 1. Get Real Name
         real_name = "Unknown Agent"
         user_doc_ref = db.collection("users").document(userId)
         user_doc = user_doc_ref.get()
@@ -196,27 +186,22 @@ def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_t
             user_data = user_doc.to_dict()
             real_name = user_data.get("fullName") or user_data.get("name") or "Anonymous"
             
-            # ✅ DETERMINE STATUS
-            # Agar cheating hai toh "disqualified", nahi toh "submitted"
             final_status = "disqualified" if request.isCheating else "submitted"
 
-            # ✅ UPDATE USER PROFILE
             user_doc_ref.update({
                 "round1_status": final_status,
                 "round1_score": request.averageScore,
                 "round1_endTime": firestore.SERVER_TIMESTAMP,
-                "isFlagged": request.isCheating # Alag se flag bhi laga diya
+                "isFlagged": request.isCheating 
             })
 
-        # 2. Leaderboard Data
         doc_data = request.dict()
         doc_data["userId"] = userId
         doc_data["username"] = real_name
         doc_data["timestamp"] = firestore.SERVER_TIMESTAMP
         doc_data["round"] = 1
-        doc_data["status"] = "disqualified" if request.isCheating else "valid" # Leaderboard ke liye status
+        doc_data["status"] = "disqualified" if request.isCheating else "valid"
         
-        # 3. Save to Leaderboard
         db.collection("leaderboard").document(userId).set(doc_data)
         
         return {"success": True, "message": "Score Saved!"}
@@ -233,7 +218,7 @@ def get_user_status(userId: str = Depends(verify_token)):
             data = doc.to_dict()
             return {
                 "success": True, 
-                "round1_status": data.get("round1_status", "pending") # pending, started, submitted, disqualified
+                "round1_status": data.get("round1_status", "pending") 
             }
         return {"success": False, "message": "User not found"}
     except Exception as e:
@@ -258,36 +243,26 @@ def get_leaderboard():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-
 # ==========================
 # 👑 ADMIN PANEL ROUTES
 # ==========================
 
 @app.get("/api/admin/stats")
 def get_admin_stats(adminId: str = Depends(verify_admin)):
-    """ Returns counts for Dashboard Cards """
     try:
         users_ref = db.collection("users")
         all_users = users_ref.stream()
         
-        stats = {
-            "total": 0,
-            "active": 0,
-            "submitted": 0,
-            "disqualified": 0
-        }
+        stats = {"total": 0, "active": 0, "submitted": 0, "disqualified": 0}
         
         for doc in all_users:
             data = doc.to_dict()
             stats["total"] += 1
             
             status = data.get("round1_status", "pending")
-            if status == "started":
-                stats["active"] += 1
-            elif status == "submitted":
-                stats["submitted"] += 1
-            elif status == "disqualified":
-                stats["disqualified"] += 1
+            if status == "started": stats["active"] += 1
+            elif status == "submitted": stats["submitted"] += 1
+            elif status == "disqualified": stats["disqualified"] += 1
                 
         return {"success": True, "stats": stats}
     except Exception as e:
@@ -295,7 +270,6 @@ def get_admin_stats(adminId: str = Depends(verify_admin)):
 
 @app.get("/api/admin/users")
 def get_all_users(adminId: str = Depends(verify_admin)):
-    """ Returns list of all users for the Table """
     try:
         users_ref = db.collection("users")
         docs = users_ref.stream()
@@ -303,7 +277,6 @@ def get_all_users(adminId: str = Depends(verify_admin)):
         users_list = []
         for doc in docs:
             data = doc.to_dict()
-            # Sensitive info hata dein
             safe_data = {
                 "userId": doc.id,
                 "name": data.get("fullName", "Unknown"),
@@ -319,26 +292,20 @@ def get_all_users(adminId: str = Depends(verify_admin)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class ResetUserRequest(BaseModel):
-    targetUserId: str
-
 @app.post("/api/admin/reset-user")
 def reset_user(request: ResetUserRequest, adminId: str = Depends(verify_admin)):
-    """ 
-    POWER ACTION: Resets a disqualified/submitted user back to start.
-    """
     print(f"⚡ Admin {adminId} is resetting User {request.targetUserId}")
     try:
         # 1. Reset User Profile Status
         db.collection("users").document(request.targetUserId).update({
-            "round1_status": "pending",  # Wapis pending kar do
+            "round1_status": "pending",
             "round1_score": 0,
             "isFlagged": False,
             "round1_startTime": firestore.DELETE_FIELD,
             "round1_endTime": firestore.DELETE_FIELD
         })
         
-        # 2. Remove from Leaderboard (Taaki purana score na dikhe)
+        # 2. Remove from Leaderboard
         db.collection("leaderboard").document(request.targetUserId).delete()
         
         return {"success": True, "message": "User access restored successfully!"}
