@@ -11,6 +11,7 @@ import Lobby from "./pages/Lobby";
 import Round1Rules from "./pages/Round1Rules";
 import Round1 from "./pages/Round1";
 import LeaderboardDashboard from './pages/LeaderboardDashboard';
+import AdminDashboard from "./pages/Admin/AdminDashboard";
 
 // Layout Component for Pages WITH Navbar
 const LayoutWithNavbar = ({ children }) => (
@@ -77,8 +78,9 @@ function App() {
           <Route path="/round-1/rules" element={<Round1Rules />} />
           <Route path="/register" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/round-1/game" element={<Round1 />} />{" "}
+          <Route path="/round1" element={<Round1 />} />{" "}
           <Route path="/leaderboard" element={<LeaderboardDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           {/* No Navbar Here */}
         </Routes>
       </div>

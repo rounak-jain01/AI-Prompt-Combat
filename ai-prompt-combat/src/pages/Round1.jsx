@@ -1,16 +1,18 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { getAuth } from "firebase/auth"; // ✅ Added Firebase Auth
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useSecurity } from "../hooks/useSecurity"; // ✅ Security Hook
 import {
   AlertTriangle,
   Lock,
   Save,
   Sparkles,
-  Clock,
   X,
   CheckCircle,
-  AlertCircle,
+  ShieldAlert,
+  Loader2,
+  Ban
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,44 +26,27 @@ const TOTAL_PAIRS = 5;
 const TIME_LIMIT_SECONDS = 25 * 60; // 25 Minutes
 
 const IMAGE_PAIRS = [
-  {
-    id: 1,
-    input: "/Round1Images/Case1/input.png",
-    target: "/Round1Images/Case1/target.png",
-  },
-  {
-    id: 2,
-    input: "/Round1Images/Case2/input.png",
-    target: "/Round1Images/Case2/target.png",
-  },
-  {
-    id: 3,
-    input: "/Round1Images/Case3/input.png",
-    target: "/Round1Images/Case3/target.png",
-  },
-  {
-    id: 4,
-    input: "/Round1Images/Case4/input.png",
-    target: "/Round1Images/Case4/target.png",
-  },
-  {
-    id: 5,
-    input: "/Round1Images/Case5/input.png",
-    target: "/Round1Images/Case5/target.png",
-  },
+  { id: 1, input: "/Round1Images/Case1/input.png", target: "/Round1Images/Case1/target.png" },
+  { id: 2, input: "/Round1Images/Case2/input.png", target: "/Round1Images/Case2/target.png" },
+  { id: 3, input: "/Round1Images/Case3/input.png", target: "/Round1Images/Case3/target.png" },
+  { id: 4, input: "/Round1Images/Case4/input.png", target: "/Round1Images/Case4/target.png" },
+  { id: 5, input: "/Round1Images/Case5/input.png", target: "/Round1Images/Case5/target.png" },
 ];
-
-const formatTime = (seconds) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-};
 
 export default function Round1() {
   const navigate = useNavigate();
+  
+  // --- GATEKEEPER STATES ---
+  const [checkingAccess, setCheckingAccess] = useState(true); 
+  const [accessDenied, setAccessDenied] = useState(false); 
+
+  // --- GAME STATES ---
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
   const [prompts, setPrompts] = useState(() => Array(TOTAL_PAIRS).fill(""));
+  
+  // --- SECURITY STATES ---
+  const [isSubmitTriggered, setIsSubmitTriggered] = useState(false); // Controls Disqualification Screen
 
   const [pairStatus, setPairStatus] = useState(() =>
     Array.from({ length: TOTAL_PAIRS }, () => ({
@@ -73,7 +58,7 @@ export default function Round1() {
       isLocked: false,
       finalSelectedPrompt: "",
       finalSelectedScore: 0,
-    })),
+    }))
   );
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -83,31 +68,73 @@ export default function Round1() {
   // --- MODAL STATES ---
   const [showLockModal, setShowLockModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [submitModalContent, setSubmitModalContent] = useState({
-    title: "",
-    message: "",
-    isWarning: false,
-  });
+  const [submitModalContent, setSubmitModalContent] = useState({ title: "", message: "", isWarning: false });
 
   const pair = IMAGE_PAIRS[currentIndex];
   const currentStatus = pairStatus[currentIndex];
   const currentPrompt = prompts[currentIndex] || "";
 
+  // ==========================================
+  // 🚪 GATEKEEPER LOGIC (CHECK STATUS ON LOAD)
+  // ==========================================
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            navigate("/login");
+            return;
+        }
+
+        try {
+            const token = await user.getIdToken();
+            const res = await fetch("http://127.0.0.1:5000/api/user-status", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                const status = data.round1_status;
+                
+                if (status === "submitted" || status === "disqualified") {
+                    setAccessDenied(true);
+                    toast.error("Access Denied: Round Completed.");
+                    setTimeout(() => navigate("/lobby", { replace: true }), 3000); 
+                } else if (status === "started") {
+                    // ✅ Valid Access
+                    setCheckingAccess(false);
+                } else {
+                    // Status is "pending" -> Redirect to Rules Page
+                    navigate("/round1-rules");
+                }
+            } else {
+                // Fallback (Allow if error, backend will catch submission)
+                setCheckingAccess(false); 
+            }
+        } catch (e) {
+            console.error("Access Check Failed", e);
+            setCheckingAccess(false); 
+        }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
   // --- TIMER EFFECT ---
   useEffect(() => {
+    if (checkingAccess || accessDenied) return; 
+    
     if (timeLeft <= 0) {
       handleAutoSubmit();
       return;
     }
     const timerId = setInterval(() => setTimeLeft((p) => p - 1), 1000);
     return () => clearInterval(timerId);
-  }, [timeLeft]);
+  }, [timeLeft, checkingAccess, accessDenied]);
 
   // --- CHECK PROMPT ---
   const handleCheckPrompt = useCallback(async () => {
     if (!currentPrompt.trim()) return toast.error("Prompt cannot be empty!");
-    if (currentStatus.attemptsLeft <= 0)
-      return toast.error("Attempts exhausted! Please lock answer.");
+    if (currentStatus.attemptsLeft <= 0) return toast.error("Attempts exhausted! Please lock answer.");
 
     setChecking(true);
     const toastId = toast.loading("Judging...");
@@ -147,7 +174,78 @@ export default function Round1() {
     }
   }, [currentPrompt, currentIndex, pair, currentStatus]);
 
-  // --- LOCK HANDLER ---
+  // --- SUBMIT LOGIC ---
+  const sendToBackend = async (dataPayload, message, toastId, isCheating = false) => {
+    const total = dataPayload.reduce((acc, item) => acc + item.score, 0);
+    const avg = (total / TOTAL_PAIRS).toFixed(2);
+
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        toast.error("Session Invalid!", { id: toastId });
+        setSubmitting(false);
+        return;
+      }
+
+      const token = await user.getIdToken();
+      const userName = user.displayName || user.email.split("@")[0] || "Unknown Agent";
+
+      const response = await fetch("http://127.0.0.1:5000/api/submit-round", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          averageScore: parseFloat(avg),
+          totalPairs: TOTAL_PAIRS,
+          breakdown: dataPayload,
+          username: userName,
+          isCheating: isCheating, 
+        }),
+      });
+
+      const resData = await response.json();
+      if (resData.success) {
+        // ✅ NEW: Clear Security Storage on Success/Disqualify
+        sessionStorage.removeItem("r1_warnings"); 
+
+        toast.success(message, { id: toastId });
+        setTimeout(() => navigate("/lobby", { replace: true }), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Submission Failed", { id: toastId });
+      setSubmitting(false);
+    }
+  };
+
+  // --- AUTO SUBMIT (For Timer & Disqualification) ---
+  const handleAutoSubmit = useCallback(() => {
+    if (isSubmitTriggered) return;
+    setIsSubmitTriggered(true);
+    setSubmitting(true);
+
+    toast.dismiss(); 
+
+    const payload = pairStatus.map((p, idx) => ({
+      pairId: idx + 1,
+      score: p.bestScore,
+      prompt: p.bestPromptText || prompts[idx],
+    }));
+
+    sendToBackend(payload, "Session Ended.", "submit-toast", true);
+  }, [isSubmitTriggered, pairStatus, prompts]);
+
+  // --- 🛡️ SECURITY HOOK ---
+  const { warnings, enterFullScreen } = useSecurity(
+    !checkingAccess && !accessDenied && !isSubmitTriggered, 
+    handleAutoSubmit
+  );
+
+  // --- MANUAL LOCK & SUBMIT HANDLERS ---
   const handleLockClick = () => {
     if (!currentPrompt.trim() && !currentStatus.bestPromptText) {
       return toast.error("Write something first!");
@@ -159,7 +257,6 @@ export default function Round1() {
     }
   };
 
-  // --- CONFIRM LOCK ---
   const confirmLock = (choice) => {
     setPairStatus((prev) => {
       const newStatus = [...prev];
@@ -190,109 +287,82 @@ export default function Round1() {
     toast.success("Locked!", { icon: "🔒" });
   };
 
-  // --- SUBMIT LOGIC (Updated for Firebase Auth) ---
-  const sendToBackend = async (dataPayload, message, toastId) => {
-    const total = dataPayload.reduce((acc, item) => acc + item.score, 0);
-    const avg = (total / TOTAL_PAIRS).toFixed(2);
-
-    try {
-      // ✅ 1. Get User & Token
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (!user) {
-        toast.error("You must be logged in to submit!", { id: toastId });
-        setSubmitting(false);
-        return;
-      }
-
-      const token = await user.getIdToken(); // 🔑 Generate Token
-
-      // ✅ 2. Send Token in Headers
-      // ✅ USER NAME NIKALO (Fallback to 'Anonymous' if empty)
-      const userName =
-        user.displayName || user.email.split("@")[0] || "Unknown Agent";
-      const response = await fetch("http://127.0.0.1:5000/api/submit-round", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Secure Header
-        },
-        body: JSON.stringify({
-          averageScore: parseFloat(avg),
-          totalPairs: TOTAL_PAIRS,
-          breakdown: dataPayload,
-          username: userName,
-          // userId backend khud token se nikalega
-        }),
-      });
-
-      const resData = await response.json();
-      if (resData.success) {
-        toast.success(message, { id: toastId });
-        setTimeout(() => navigate("/lobby"), 2000);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Submission Failed", { id: toastId });
-      setSubmitting(false);
-    }
-  };
-
-  // --- TRIGGER SUBMIT MODAL ---
   const handleManualSubmitClick = () => {
     const allLocked = pairStatus.every((p) => p.isLocked);
-
-    if (!allLocked) {
-      setSubmitModalContent({
-        title: "Incomplete Submission",
-        message:
-          "Some answers are NOT locked. We will automatically use your highest score for unlocked cases. Are you sure you want to submit?",
-        isWarning: true,
-      });
-    } else {
-      setSubmitModalContent({
-        title: "Confirm Submission",
-        message:
-          "Are you sure you want to submit your final answers for this round?",
-        isWarning: false,
-      });
-    }
+    setSubmitModalContent({
+        title: allLocked ? "Confirm Submission" : "Incomplete Submission",
+        message: allLocked ? "Are you sure you want to submit your final answers?" : "Some answers are unlocked. Submit anyway?",
+        isWarning: !allLocked
+    });
     setShowSubmitModal(true);
   };
 
-  // --- EXECUTE SUBMIT ---
   const executeSubmit = () => {
     setShowSubmitModal(false);
+    if (isSubmitTriggered) return;
     setSubmitting(true);
     const tId = toast.loading("Securely Submitting...");
 
     const payload = pairStatus.map((p, idx) => ({
       pairId: idx + 1,
       score: p.isLocked ? p.finalSelectedScore : p.bestScore,
-      prompt: p.isLocked
-        ? p.finalSelectedPrompt
-        : p.bestPromptText || prompts[idx],
+      prompt: p.isLocked ? p.finalSelectedPrompt : p.bestPromptText || prompts[idx],
     }));
 
-    sendToBackend(payload, "Submitted Successfully!", tId);
+    sendToBackend(payload, "Submitted Successfully!", tId, false);
   };
 
-  const handleAutoSubmit = () => {
-    setSubmitting(true);
-    const tId = toast.loading("Time Up! Auto-submitting...");
-    const payload = pairStatus.map((p, idx) => ({
-      pairId: idx + 1,
-      score: p.bestScore,
-      prompt: p.bestPromptText || prompts[idx],
-    }));
-    sendToBackend(payload, "Auto-Submitted!", tId);
-  };
+  // ==========================================
+  // 🖥️ RENDER LOGIC
+  // ==========================================
 
-  // --- RENDER ---
-  if (!pair || !currentStatus)
-    return <div className="text-white p-10">Loading...</div>;
+  // 1. CHECKING ACCESS (Loading Screen)
+  if (checkingAccess) {
+    return (
+        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-[#D4AF37]">
+            <Loader2 size={48} className="animate-spin mb-4" />
+            <h2 className="text-xl font-bold">Verifying Access...</h2>
+        </div>
+    );
+  }
 
+  // 2. ACCESS DENIED SCREEN
+  if (accessDenied) {
+    return (
+        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-red-500">
+            <Ban size={64} className="mb-4" />
+            <h1 className="text-3xl font-bold text-white mb-2">Access Denied</h1>
+            <p className="text-gray-400 mb-6">You have already completed or been disqualified from this round.</p>
+            <button 
+                onClick={() => navigate("/lobby")}
+                className="cursor-pointer px-6 py-2 bg-[#D4AF37] text-black font-bold rounded-lg hover:bg-[#b8952b]"
+            >
+                Return to Lobby
+            </button>
+        </div>
+    );
+  }
+
+  // 3. DISQUALIFIED SCREEN
+  if (isSubmitTriggered) {
+    return (
+      <div className="min-h-screen bg-red-950 flex flex-col items-center justify-center p-4 text-center fixed inset-0 z-[99999]">
+        <div className="w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <ShieldAlert size={48} className="text-red-500" />
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-2">Disqualified!</h1>
+        <p className="text-red-300 text-lg mb-8 max-w-md">
+          Maximum security violations detected. Your session is being terminated and flagged.
+        </p>
+        <div className="flex items-center gap-3 text-[#D4AF37] bg-black/30 px-6 py-3 rounded-lg border border-[#D4AF37]/30">
+          <Loader2 size={24} className="animate-spin" />
+          <span className="font-mono">Submitting Data & Redirecting...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. MAIN GAME UI
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col relative overflow-hidden selection:bg-[#D4AF37] selection:text-black">
       {/* Background Ambience */}
@@ -304,7 +374,22 @@ export default function Round1() {
         }}
       />
 
-      {/* === LOCK SELECTION MODAL === */}
+      {/* WARNING OVERLAY */}
+      {/* <AnimatePresence>
+        {warnings > 0 && warnings <= 3 && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-red-600/90 text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 backdrop-blur-md"
+          >
+            <AlertTriangle size={20} className="animate-pulse" />
+            Warning {warnings}/3: Focus on the screen!
+          </motion.div>
+        )}
+      </AnimatePresence> */}
+
+      {/* === LOCK MODAL === */}
       <AnimatePresence>
         {showLockModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
@@ -364,7 +449,7 @@ export default function Round1() {
         )}
       </AnimatePresence>
 
-      {/* === SUBMIT CONFIRMATION MODAL === */}
+      {/* === SUBMIT CONFIRM MODAL === */}
       <AnimatePresence>
         {showSubmitModal && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
@@ -422,7 +507,7 @@ export default function Round1() {
         )}
       </AnimatePresence>
 
-      {/* === HEADER === */}
+      {/* === TOP BAR === */}
       <div className="sticky top-0 z-40 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 px-6 py-3 flex items-center justify-between shadow-lg">
         <div className="flex-1">
           <TopBar
@@ -431,27 +516,9 @@ export default function Round1() {
             timeLeft={timeLeft}
           />
         </div>
-
-        <div className="flex items-center gap-4 pl-6 border-l border-white/10 ml-4">
-          <div className="text-right hidden md:block">
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
-              Remaining
-            </p>
-            <p className="text-xs text-[#D4AF37] font-bold">Round 01</p>
-          </div>
-          <div
-            className={`flex items-center gap-3 px-5 py-2 rounded-lg border font-mono text-2xl font-bold tracking-widest transition-all ${
-              timeLeft < 60
-                ? "bg-red-950/30 border-red-500 text-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                : "bg-black/40 border-[#D4AF37]/30 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.1)]"
-            }`}
-          >
-            <Clock size={24} />
-            {formatTime(timeLeft)}
-          </div>
-        </div>
       </div>
 
+      {/* === GAME AREA === */}
       <main className="flex-1 relative z-10 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           <ImageCard label="Input" src={pair.input} isTarget={false} />

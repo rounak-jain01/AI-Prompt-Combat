@@ -1,7 +1,7 @@
-import json
 import os
+import json
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi import FastAPI, HTTPException, Header, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer, util
@@ -10,32 +10,35 @@ from sentence_transformers import SentenceTransformer, util
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
-# 1. Initialize Firebase (Singleton pattern to avoid re-initialization error)
+# 1. Initialize Firebase (Smart Logic for Local vs Render)
 if not firebase_admin._apps:
-    # Check agar Render par Environment Variable set hai
     firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
     
     if firebase_creds_json:
-        # PRODUCTION: String se Dict banao
+        # PRODUCTION (Render)
         cred_dict = json.loads(firebase_creds_json)
         cred = credentials.Certificate(cred_dict)
-        print("✅ Firebase Loaded from Environment Variable (Production)")
+        print("✅ Firebase Loaded from Environment Variable")
     else:
+        # LOCAL
         if os.path.exists("serviceAccountKey.json"):
             cred = credentials.Certificate("serviceAccountKey.json")
             print("✅ Firebase Loaded from Local File")
         else:
-            raise Exception("❌ Firebase Key not found! Set FIREBASE_CREDENTIALS env var or add serviceAccountKey.json")
+            # Fallback (Run without DB if needed, but warn)
+            print("⚠️ Warning: serviceAccountKey.json not found.")
+            cred = None
 
-    firebase_admin.initialize_app(cred)
+    if cred:
+        firebase_admin.initialize_app(cred)
 
 # Database Client
-db = firestore.client()
+db = firestore.client() if firebase_admin._apps else None
 
 # Init App
 app = FastAPI()
 
-# CORS Setup (Allow Frontend to connect)
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,7 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load AI Model (Download on first run)
+# Load AI Model
 print("🤖 Loading AI Judge Model...")
 model = SentenceTransformer('all-MiniLM-L6-v2')
 print("✅ AI Judge Ready!")
@@ -55,23 +58,28 @@ class EvaluateRequest(BaseModel):
     prompt: str
     pairId: int
 
-# Note: 'userId' hata diya hai kyunki wo hum Token se nikalenge
 class RoundSubmissionRequest(BaseModel):
     averageScore: float
     totalPairs: int
-    breakdown: list  # List of { pairId, score, prompt }
-    username: str = "Unknown" # ✅ Add this field
+    breakdown: list
+    username: str = "Unknown"
+    isCheating: bool = False
 
-# --- HIDDEN TARGET PROMPTS (The Answers) ---
+# ✅ NEW MODEL FOR START ROUND
+class StartRoundRequest(BaseModel):
+    roundId: str
+
+# --- CONSTANTS ---
 TARGET_PROMPTS = {
     1: "Solarpunk architecture with vertical gardens, lush greenery covering concrete, cascading waterfalls, futuristic sustainable design, bright sunlight, utopian atmosphere, organic shapes, high detail.",
-    2: "",
-    3: "MSurreal portrait made of bioluminescent blue liquid water, fluid form with splashing effects, translucent texture, glowing particles, ethereal fantasy style, dark background, magical atmosphere.assive steampunk space station shaped like a gear orbiting a planet, industrial sci-fi architecture, metallic details, cosmic background with stars, cinematic scale, intricate machinery.",
+    2: "Surreal portrait made of bioluminescent blue liquid water, fluid form with splashing effects, translucent texture, glowing particles, ethereal fantasy style, dark background, magical atmosphere.",
+    3: "Massive steampunk space station shaped like a gear orbiting a planet, industrial sci-fi architecture, metallic details, cosmic background with stars, cinematic scale, intricate machinery.",
     4: "Liminal space horror playground, foggy and abandoned atmosphere, rusted metal, muted desaturated colors, eerie lighting, unsettling vibe, haunted aesthetic.",
     5: "Intricate 3D paper quilling art of a lion, layered paper strips with depth, vibrant colors, handmade craft texture, papercraft style, abstract artistic representation."
 }
 
-# --- SECURITY HELPER ---
+# --- HELPER FUNCTIONS (Ye sabse upar hone chahiye) ---
+
 def verify_token(authorization: str = Header(...)):
     """
     Extracts the Bearer Token from the header and verifies it with Firebase Auth.
@@ -91,18 +99,63 @@ def verify_token(authorization: str = Header(...)):
         print(f"Auth Error: {e}")
         raise HTTPException(status_code=401, detail="Invalid or Expired Token")
 
+
+# --- ADMIN SECURITY ---
+def verify_admin(userId: str = Depends(verify_token)):
+    """
+    Checks if the authenticated user has 'admin' role.
+    """
+    user_doc = db.collection("users").document(userId).get()
+    if not user_doc.exists:
+        raise HTTPException(status_code=403, detail="User profile not found")
+    
+    data = user_doc.to_dict()
+    if data.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="🚫 Access Denied: Admins Only")
+    
+    return userId
 # --- ROUTES ---
 
 @app.get("/")
 def read_root():
-    return {"status": "Kaggle Koders Backend is Running 🚀"}
+    return {"status": "Backend is Running 🚀"}
+
+# ✅ START ROUND API (Security Step 1)
+@app.post("/api/start-round")
+def start_round(request: StartRoundRequest, userId: str = Depends(verify_token)):
+    """
+    Marks the user as having STARTED the round. 
+    Prevents re-entry if they refresh or leave.
+    """
+    print(f"🚦 User {userId} starting round {request.roundId}")
+    try:
+        user_ref = db.collection("users").document(userId)
+        user_doc = user_ref.get()
+        
+        if user_doc.exists:
+            data = user_doc.to_dict()
+            # Check agar pehle se submitted hai
+            if data.get(f"{request.roundId}_status") == "submitted":
+                 return {"success": False, "message": "Already submitted!"}
+            
+            # Check agar pehle se started hai (Optional: Agar strict one-time entry chahiye)
+            # if data.get(f"{request.roundId}_status") == "started":
+            #      return {"success": False, "message": "You have already started this round!"}
+
+            # Mark as started
+            user_ref.update({
+                f"{request.roundId}_status": "started",
+                f"{request.roundId}_startTime": firestore.SERVER_TIMESTAMP
+            })
+            return {"success": True}
+        else:
+             raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        print(f"Error starting round: {e}")
+        raise HTTPException(status_code=500, detail="Database Error")
 
 @app.post("/api/evaluate")
 def evaluate_prompt(request: EvaluateRequest):
-    """
-    Calculates similarity score between user prompt and target prompt.
-    Does NOT require authentication (User can check score freely).
-    """
     target_prompt = TARGET_PROMPTS.get(request.pairId)
     if not target_prompt:
         raise HTTPException(status_code=404, detail="Invalid Pair ID")
@@ -126,49 +179,64 @@ def evaluate_prompt(request: EvaluateRequest):
 
 @app.post("/api/submit-round")
 def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_token)):
-    """
-    Saves score and fetches REAL NAME from 'users' collection.
-    """
-    print(f"📥 Processing Submission for UserUID: {userId}")
+    print(f"📥 Processing Submission for UserUID: {userId} | Cheating: {request.isCheating}")
     
     try:
-        # 🔍 STEP 1: Firestore 'users' collection se Real Name nikalo
-        real_name = "Unknown Agent" # Default fallback
-        
-        # Database se user ka document dhoondo
+        # 1. Get Real Name
+        real_name = "Unknown Agent"
         user_doc_ref = db.collection("users").document(userId)
         user_doc = user_doc_ref.get()
         
         if user_doc.exists:
             user_data = user_doc.to_dict()
-            # 'fullName' field nikalo (Jo aapke screenshot mein hai)
             real_name = user_data.get("fullName") or user_data.get("name") or "Anonymous"
-            print(f"✅ Found User Name: {real_name}")
-        else:
-            print("⚠️ User document not found in 'users' collection")
+            
+            # ✅ DETERMINE STATUS
+            # Agar cheating hai toh "disqualified", nahi toh "submitted"
+            final_status = "disqualified" if request.isCheating else "submitted"
 
-        # 💾 STEP 2: Data Prepare karo
+            # ✅ UPDATE USER PROFILE
+            user_doc_ref.update({
+                "round1_status": final_status,
+                "round1_score": request.averageScore,
+                "round1_endTime": firestore.SERVER_TIMESTAMP,
+                "isFlagged": request.isCheating # Alag se flag bhi laga diya
+            })
+
+        # 2. Leaderboard Data
         doc_data = request.dict()
         doc_data["userId"] = userId
-        doc_data["username"] = real_name  # <--- Yahan humne asli naam force kar diya
+        doc_data["username"] = real_name
         doc_data["timestamp"] = firestore.SERVER_TIMESTAMP
         doc_data["round"] = 1
+        doc_data["status"] = "disqualified" if request.isCheating else "valid" # Leaderboard ke liye status
         
-        # 🚀 STEP 3: Leaderboard mein save karo
+        # 3. Save to Leaderboard
         db.collection("leaderboard").document(userId).set(doc_data)
         
-        return {"success": True, "message": "Score & Name Saved Successfully!"}
+        return {"success": True, "message": "Score Saved!"}
     
     except Exception as e:
         print(f"🔥 Database Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to save data: {str(e)}")
-    
+        raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Update/Verify Leaderboard Route
+@app.get("/api/user-status")
+def get_user_status(userId: str = Depends(verify_token)):
+    try:
+        doc = db.collection("users").document(userId).get()
+        if doc.exists:
+            data = doc.to_dict()
+            return {
+                "success": True, 
+                "round1_status": data.get("round1_status", "pending") # pending, started, submitted, disqualified
+            }
+        return {"success": False, "message": "User not found"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/leaderboard")
 def get_leaderboard():
     try:
-        # Fetch Top 50 (Sort by Score DESC)
         docs = db.collection("leaderboard")\
                  .order_by("averageScore", direction=firestore.Query.DESCENDING)\
                  .limit(50)\
@@ -177,7 +245,6 @@ def get_leaderboard():
         leaderboard_data = []
         for doc in docs:
             data = doc.to_dict()
-            # Convert timestamp to string for JSON serialization
             if "timestamp" in data and data["timestamp"]:
                  data["timestamp"] = str(data["timestamp"])
             leaderboard_data.append(data)
@@ -185,3 +252,91 @@ def get_leaderboard():
         return {"success": True, "leaderboard": leaderboard_data}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# ==========================
+# 👑 ADMIN PANEL ROUTES
+# ==========================
+
+@app.get("/api/admin/stats")
+def get_admin_stats(adminId: str = Depends(verify_admin)):
+    """ Returns counts for Dashboard Cards """
+    try:
+        users_ref = db.collection("users")
+        all_users = users_ref.stream()
+        
+        stats = {
+            "total": 0,
+            "active": 0,
+            "submitted": 0,
+            "disqualified": 0
+        }
+        
+        for doc in all_users:
+            data = doc.to_dict()
+            stats["total"] += 1
+            
+            status = data.get("round1_status", "pending")
+            if status == "started":
+                stats["active"] += 1
+            elif status == "submitted":
+                stats["submitted"] += 1
+            elif status == "disqualified":
+                stats["disqualified"] += 1
+                
+        return {"success": True, "stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/users")
+def get_all_users(adminId: str = Depends(verify_admin)):
+    """ Returns list of all users for the Table """
+    try:
+        users_ref = db.collection("users")
+        docs = users_ref.stream()
+        
+        users_list = []
+        for doc in docs:
+            data = doc.to_dict()
+            # Sensitive info hata dein
+            safe_data = {
+                "userId": doc.id,
+                "name": data.get("fullName", "Unknown"),
+                "email": data.get("email", "No Email"),
+                "status": data.get("round1_status", "pending"),
+                "score": data.get("round1_score", 0),
+                "isFlagged": data.get("isFlagged", False),
+                "role": data.get("role", "student")
+            }
+            users_list.append(safe_data)
+            
+        return {"success": True, "users": users_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ResetUserRequest(BaseModel):
+    targetUserId: str
+
+@app.post("/api/admin/reset-user")
+def reset_user(request: ResetUserRequest, adminId: str = Depends(verify_admin)):
+    """ 
+    POWER ACTION: Resets a disqualified/submitted user back to start.
+    """
+    print(f"⚡ Admin {adminId} is resetting User {request.targetUserId}")
+    try:
+        # 1. Reset User Profile Status
+        db.collection("users").document(request.targetUserId).update({
+            "round1_status": "pending",  # Wapis pending kar do
+            "round1_score": 0,
+            "isFlagged": False,
+            "round1_startTime": firestore.DELETE_FIELD,
+            "round1_endTime": firestore.DELETE_FIELD
+        })
+        
+        # 2. Remove from Leaderboard (Taaki purana score na dikhe)
+        db.collection("leaderboard").document(request.targetUserId).delete()
+        
+        return {"success": True, "message": "User access restored successfully!"}
+    except Exception as e:
+        print(f"Error resetting user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset user")
