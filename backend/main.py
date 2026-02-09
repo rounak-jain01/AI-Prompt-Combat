@@ -4,7 +4,6 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException, Header, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer, util
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 
