@@ -4,7 +4,6 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebase'; // Check path
 import { LogOut, Play, Lock, User, Terminal } from 'lucide-react';
 import toast from 'react-hot-toast';
-import LeaderboardDashboard from './LeaderboardDashboard';
 
 const Lobby = () => {
   const navigate = useNavigate();

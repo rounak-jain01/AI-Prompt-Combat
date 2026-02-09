@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useSecurity } from "../hooks/useSecurity"; // ✅ Security Hook
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from "../config";
 import {
   AlertTriangle,
   Lock,

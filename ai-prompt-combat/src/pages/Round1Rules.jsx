@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getAuth } from "firebase/auth";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from "../config";
 import { 
   Clock, Target, Zap, Lock, Play, ShieldAlert, 
   MousePointerClick, AlertTriangle, CheckCircle, X, Loader2,
