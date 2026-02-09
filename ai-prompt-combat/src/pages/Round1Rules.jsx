@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getAuth } from "firebase/auth";
+import { API_BASE_URL } from "../../config";
 import { 
   Clock, Target, Zap, Lock, Play, ShieldAlert, 
   MousePointerClick, AlertTriangle, CheckCircle, X, Loader2,
@@ -48,7 +49,7 @@ export default function Round1Rules() {
       const token = await user.getIdToken();
 
       // 1. Call Backend to Mark Round as Started
-      const res = await fetch("http://127.0.0.1:5000/api/start-round", {
+      const res = await fetch(`${API_BASE_URL}/api/start-round`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

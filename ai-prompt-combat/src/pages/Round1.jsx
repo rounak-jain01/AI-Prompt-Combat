@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useSecurity } from "../hooks/useSecurity"; // ✅ Security Hook
+import { API_BASE_URL } from "../../config";
 import {
   AlertTriangle,
   Lock,
@@ -87,7 +88,7 @@ export default function Round1() {
 
         try {
             const token = await user.getIdToken();
-            const res = await fetch("http://127.0.0.1:5000/api/user-status", {
+            const res = await fetch(`${API_BASE_URL}/api/user-status`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
@@ -140,7 +141,7 @@ export default function Round1() {
     const toastId = toast.loading("Judging...");
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/evaluate", {
+      const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: currentPrompt, pairId: pair.id }),
@@ -192,7 +193,7 @@ export default function Round1() {
       const token = await user.getIdToken();
       const userName = user.displayName || user.email.split("@")[0] || "Unknown Agent";
 
-      const response = await fetch("http://127.0.0.1:5000/api/submit-round", {
+      const response = await fetch(`${API_BASE_URL}/api/submit-round`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

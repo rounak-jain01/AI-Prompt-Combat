@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../../config";
 import { 
   Users, Activity, CheckCircle, ShieldAlert, 
   Search, RefreshCw, RotateCcw, Filter, LogOut 
@@ -28,12 +29,12 @@ export default function AdminDashboard() {
       const headers = { Authorization: `Bearer ${token}` };
 
       // 1. Get Stats
-      const statsRes = await fetch("http://127.0.0.1:5000/api/admin/stats", { headers });
+      const statsRes = await fetch(`${API_BASE_URL}/api/admin/stats`, { headers });
       const statsData = await statsRes.json();
       if (statsData.success) setStats(statsData.stats);
 
       // 2. Get Users
-      const usersRes = await fetch("http://127.0.0.1:5000/api/admin/users", { headers });
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, { headers });
       const usersData = await usersRes.json();
       if (usersData.success) setUsers(usersData.users);
 
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
 
-      const res = await fetch("http://127.0.0.1:5000/api/admin/reset-user", {
+      const res = await fetch(`${API_BASE_URL}/api/admin/reset-user`, {
         method: "POST",
         headers: { 
             "Content-Type": "application/json",
