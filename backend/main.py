@@ -1,8 +1,8 @@
 import os
 import json
 from datetime import datetime
-import requests  # ✅ Added for HF Space call
-from fastapi import FastAPI, HTTPException, Header, Depends, Body
+import requests  # ✅ For HF Space call
+from fastapi import FastAPI, HTTPException, Header, Depends, Body, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -41,16 +41,11 @@ app = FastAPI()
 # 2. Add CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (localhost, render, etc.)
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
-# ❌ REMOVED: Heavy Model Loading (Render will be happy now)
-# print("🤖 Loading AI Judge Model...")
-# model = SentenceTransformer('all-MiniLM-L6-v2') 
-# print("✅ AI Judge Ready!")
 
 # --- DATA MODELS ---
 
@@ -70,6 +65,11 @@ class StartRoundRequest(BaseModel):
 
 class ResetUserRequest(BaseModel):
     targetUserId: str
+
+# ✅ NEW: Round 2 Submission Model
+class Round2Submission(BaseModel):
+    videoUrl: str
+    prompt: str
 
 # --- CONSTANTS ---
 TARGET_PROMPTS = {
@@ -132,7 +132,7 @@ def start_round(request: StartRoundRequest, userId: str = Depends(verify_token))
         
         if user_doc.exists:
             data = user_doc.to_dict()
-            # Check agar pehle se submitted hai
+            # Check if already submitted
             if data.get(f"{request.roundId}_status") == "submitted":
                  return {"success": False, "message": "Already submitted!"}
             
@@ -148,7 +148,7 @@ def start_round(request: StartRoundRequest, userId: str = Depends(verify_token))
         print(f"Error starting round: {e}")
         raise HTTPException(status_code=500, detail="Database Error")
 
-# ✅ Updated Evaluate Route (Uses HF Space)
+# ✅ Round 1 Evaluation Route
 @app.post("/api/evaluate")
 def evaluate_prompt(request: EvaluateRequest):
     # 👇 Replace with YOUR HF Space URL
@@ -173,6 +173,7 @@ def evaluate_prompt(request: EvaluateRequest):
         print(f"Connection Error: {e}")
         return {"success": True, "score": 0, "feedback": ["Server Busy, try again in 2s"]}
 
+# ✅ Round 1 Submission Route
 @app.post("/api/submit-round")
 def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_token)):
     print(f"📥 Processing Submission for UserUID: {userId} | Cheating: {request.isCheating}")
@@ -210,6 +211,45 @@ def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_t
         print(f"🔥 Database Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==========================================
+# 🚀 NEW: ROUND 2 SUBMISSION ROUTE
+# ==========================================
+@app.post("/api/round2/submit")
+def submit_round2(submission: Round2Submission, userId: str = Depends(verify_token)):
+    """
+    Receives Video Link & Prompt from Cloudinary/Frontend.
+    Updates Firestore User Profile.
+    """
+    print(f"🎥 Round 2 Upload for User: {userId}")
+    
+    try:
+        user_ref = db.collection("users").document(userId)
+        
+        # Check if user exists
+        if not user_ref.get().exists:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Update User Document
+        user_ref.update({
+            "round2_status": "submitted",
+            "round2_video_link": submission.videoUrl,
+            "round2_prompt": submission.prompt,
+            "round2_submitted_at": firestore.SERVER_TIMESTAMP
+        })
+        
+        return {
+            "success": True, 
+            "message": "Round 2 Submission Recorded",
+            "status": "submitted"
+        }
+
+    except Exception as e:
+        print(f"Error submitting Round 2: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database Update Failed")
+
+
+# --- GENERAL USER ROUTES ---
+
 @app.get("/api/user-status")
 def get_user_status(userId: str = Depends(verify_token)):
     try:
@@ -218,7 +258,8 @@ def get_user_status(userId: str = Depends(verify_token)):
             data = doc.to_dict()
             return {
                 "success": True, 
-                "round1_status": data.get("round1_status", "pending") 
+                "round1_status": data.get("round1_status", "pending"),
+                "round2_status": data.get("round2_status", "pending") # Added Round 2 status check
             }
         return {"success": False, "message": "User not found"}
     except Exception as e:
@@ -253,16 +294,25 @@ def get_admin_stats(adminId: str = Depends(verify_admin)):
         users_ref = db.collection("users")
         all_users = users_ref.stream()
         
-        stats = {"total": 0, "active": 0, "submitted": 0, "disqualified": 0}
+        stats = {
+            "total": 0, 
+            "round1_active": 0, "round1_submitted": 0, 
+            "round2_submitted": 0,
+            "disqualified": 0
+        }
         
         for doc in all_users:
             data = doc.to_dict()
             stats["total"] += 1
             
-            status = data.get("round1_status", "pending")
-            if status == "started": stats["active"] += 1
-            elif status == "submitted": stats["submitted"] += 1
-            elif status == "disqualified": stats["disqualified"] += 1
+            r1_status = data.get("round1_status", "pending")
+            r2_status = data.get("round2_status", "pending")
+
+            if r1_status == "started": stats["round1_active"] += 1
+            elif r1_status == "submitted": stats["round1_submitted"] += 1
+            elif r1_status == "disqualified": stats["disqualified"] += 1
+            
+            if r2_status == "submitted": stats["round2_submitted"] += 1
                 
         return {"success": True, "stats": stats}
     except Exception as e:
@@ -282,6 +332,8 @@ def get_all_users(adminId: str = Depends(verify_admin)):
                 "name": data.get("fullName", "Unknown"),
                 "email": data.get("email", "No Email"),
                 "status": data.get("round1_status", "pending"),
+                "round2_status": data.get("round2_status", "pending"), # Added for Admin View
+                "round2_video_link": data.get("round2_video_link", ""), # Admin can see link
                 "score": data.get("round1_score", 0),
                 "isFlagged": data.get("isFlagged", False),
                 "role": data.get("role", "student")
@@ -296,19 +348,65 @@ def get_all_users(adminId: str = Depends(verify_admin)):
 def reset_user(request: ResetUserRequest, adminId: str = Depends(verify_admin)):
     print(f"⚡ Admin {adminId} is resetting User {request.targetUserId}")
     try:
-        # 1. Reset User Profile Status
+        # 1. Reset User Profile Status (Both Rounds)
         db.collection("users").document(request.targetUserId).update({
             "round1_status": "pending",
             "round1_score": 0,
+            "round2_status": "pending",
+            "round2_video_link": firestore.DELETE_FIELD,
+            "round2_prompt": firestore.DELETE_FIELD,
             "isFlagged": False,
             "round1_startTime": firestore.DELETE_FIELD,
-            "round1_endTime": firestore.DELETE_FIELD
+            "round1_endTime": firestore.DELETE_FIELD,
+            "round2_submitted_at": firestore.DELETE_FIELD
         })
         
         # 2. Remove from Leaderboard
         db.collection("leaderboard").document(request.targetUserId).delete()
         
-        return {"success": True, "message": "User access restored successfully!"}
+        return {"success": True, "message": "User access fully restored!"}
     except Exception as e:
         print(f"Error resetting user: {e}")
         raise HTTPException(status_code=500, detail="Failed to reset user")
+    
+
+# ==========================================
+# 🚀 ROUND 2 SUBMISSION ROUTE (DB UPDATE)
+# ==========================================
+@app.post("/api/round2/submit")
+def submit_round2(submission: Round2Submission, userId: str = Depends(verify_token)):
+    """
+    Saves Round 2 Data to Firestore.
+    Fields Saved:
+    - round2_video_link: Cloudinary URL
+    - round2_prompt: User's Prompt (Crucial for Judging)
+    - round2_status: 'submitted'
+    - round2_submitted_at: Server Timestamp (For tie-breaking)
+    """
+    print(f"🎥 Round 2 Submission for User: {userId}")
+    
+    try:
+        user_ref = db.collection("users").document(userId)
+        
+        # Check if user exists
+        if not user_ref.get().exists:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # ✅ Update Database with Competition Data
+        user_ref.update({
+            "round2_status": "submitted",           # Mark as Done
+            "round2_video_link": submission.videoUrl, # Save Video
+            "round2_prompt": submission.prompt,       # Save Prompt
+            "round2_submitted_at": firestore.SERVER_TIMESTAMP, # Exact Time (Fairness)
+            "round2_score": 0 # Initialize Score (Optional, for later manual judging)
+        })
+        
+        return {
+            "success": True, 
+            "message": "Round 2 Submission Recorded",
+            "status": "submitted"
+        }
+
+    except Exception as e:
+        print(f"Error submitting Round 2: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database Update Failed")

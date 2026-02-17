@@ -5,6 +5,8 @@ backend/*.pyc
 backend/.env
 backend/scores.json
 backend/serviceAccountKey.json
+backend/service_account.json
+service_account.json
 # React Frontend Ignored Files
 node_modules/
 dist/

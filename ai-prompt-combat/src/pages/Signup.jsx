@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User,
@@ -15,6 +14,8 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -32,6 +33,7 @@ const robotImage =
 const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // State for Modal
 
   // Password Visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +71,7 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
-        formData.password,
+        formData.password
       );
       const user = userCredential.user;
 
@@ -90,16 +92,12 @@ const Signup = () => {
 
       await signOut(auth);
 
-      toast.success("Account Created! Verify Email.", {
-        id: toastId,
-        style: {
-          background: "#050505",
-          color: "#D4AF37",
-          border: "1px solid #D4AF37",
-        },
-      });
+      // Dismiss the loading toast
+      toast.dismiss(toastId);
+      
+      // STOP navigation and SHOW MODAL instead
+      setShowSuccessModal(true);
 
-      navigate("/login");
     } catch (err) {
       console.error(err);
       let msg = "Registration Failed.";
@@ -113,7 +111,52 @@ const Signup = () => {
   };
 
   return (
-    <div className="h-screen w-full flex bg-dark overflow-hidden">
+    <div className="h-screen w-full flex bg-dark overflow-hidden relative">
+      
+      {/* === SUCCESS MODAL === */}
+      {showSuccessModal && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="bg-[#111] border border-[#D4AF37] w-full max-w-md rounded-2xl p-6 shadow-[0_0_50px_-10px_rgba(212,175,55,0.3)] transform animate-in fade-in zoom-in duration-300">
+            <div className="flex flex-col items-center text-center space-y-4">
+              {/* Icon */}
+              <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-2">
+                <Mail className="text-[#D4AF37]" size={32} />
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-display font-bold text-white">
+                Verify Your Email
+              </h2>
+
+              {/* Body Text */}
+              <div className="space-y-3">
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  We've sent a verification link to <br />
+                  <span className="text-white font-semibold">{formData.email}</span>
+                </p>
+
+                {/* Spam Warning Box */}
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-3 flex items-start gap-3 text-left">
+                  <AlertTriangle className="text-yellow-500 shrink-0 mt-0.5" size={18} />
+                  <p className="text-xs text-gray-400">
+                    <span className="text-yellow-500 font-bold block mb-1">Check Spam Folder!</span>
+                    Sometimes automated emails end up in <b>Spam</b> or <b>Junk</b>. Please check there if you don't see it in your inbox.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full py-3 bg-[#D4AF37] text-black font-bold rounded-lg hover:bg-[#b8952b] transition-all flex items-center justify-center gap-2 mt-4"
+              >
+                Go to Login <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* === LEFT SIDE === */}
       <div className="w-full lg:w-[40%] h-full flex flex-col justify-center px-8 lg:px-12 relative z-10 bg-dark border-r border-white/5">
         {/* Compact Header */}
@@ -253,15 +296,13 @@ const Signup = () => {
         </form>
       </div>
 
-      {/* === RIGHT SIDE:  === */}
+      {/* === RIGHT SIDE === */}
       <div className="hidden lg:block w-[60%] h-full relative bg-black">
-       
         <img
           src={robotImage}
           alt="AI Robot"
           className="w-full h-full object-cover opacity-90"
         />
-        
         <div className="absolute inset-0 shadow-[inset_100px_0_100px_-50px_rgba(5,5,5,1)]"></div>
       </div>
     </div>
