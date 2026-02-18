@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
+
 # 1. Initialize Firebase (Smart Logic for Local vs Render)
 if not firebase_admin._apps:
     firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
@@ -410,3 +411,56 @@ def submit_round2(submission: Round2Submission, userId: str = Depends(verify_tok
     except Exception as e:
         print(f"Error submitting Round 2: {str(e)}")
         raise HTTPException(status_code=500, detail="Database Update Failed")
+
+
+class AddUserModel(BaseModel):
+    email: str
+    fullName: str
+    role: str = "student"
+
+@app.post("/api/admin/add-user")
+def add_user_by_admin(data: AddUserModel, current_user: str = Depends(verify_token)):
+    """
+    1. Creates User in Firebase Authentication.
+    2. Creates User Profile in Firestore.
+    3. Generates a Password Setup Link.
+    """
+    # Check if requester is admin (Optional: Add logic to verify current_user role)
+    
+    try:
+        # 1. Create User in Firebase Auth
+        user = auth.create_user(
+            email=data.email,
+            display_name=data.fullName,
+            email_verified=True # Auto-verify since Admin added them
+        )
+        
+        # 2. Create User Entry in Firestore
+        user_data = {
+            "fullName": data.fullName,
+            "email": data.email,
+            "role": data.role,
+            "round1_status": "pending",
+            "round2_status": "pending",
+            "round1_score": 0,
+            "round2_score": 0,
+            "createdAt": firestore.SERVER_TIMESTAMP
+        }
+        db.collection("users").document(user.uid).set(user_data)
+
+        # 3. Generate Password Reset Link (Invite Link)
+        # Yeh link user ko password set karne ki permission dega
+        reset_link = auth.generate_password_reset_link(data.email)
+
+        return {
+            "success": True, 
+            "message": "User created successfully!",
+            "uid": user.uid,
+            "inviteLink": reset_link # Frontend par show karenge
+        }
+
+    except auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Email already exists in Authentication.")
+    except Exception as e:
+        print(f"Error adding user: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
