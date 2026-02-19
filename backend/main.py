@@ -464,3 +464,30 @@ def add_user_by_admin(data: AddUserModel, current_user: str = Depends(verify_tok
     except Exception as e:
         print(f"Error adding user: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/admin/delete-user/{target_uid}")
+def delete_user_by_admin(target_uid: str, current_user: str = Depends(verify_token)):
+    """
+    Deletes the user ENTIRELY from Firebase Authentication AND Firestore.
+    """
+    try:
+        # 1. Delete from Firebase Authentication (Login System)
+        try:
+            auth.delete_user(target_uid)
+        except auth.UserNotFoundError:
+            pass # Agar auth mein nahi hai, toh aage badho
+
+        # 2. Delete from Firestore Database
+        db.collection("users").document(target_uid).delete()
+        
+        # (Optional) Agar koi alag leaderboard table banayi hai toh usse bhi udao
+        try:
+            db.collection("leaderboard").document(target_uid).delete()
+        except:
+            pass
+            
+        return {"success": True, "message": "User completely obliterated from system."}
+
+    except Exception as e:
+        print(f"Error completely deleting user: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

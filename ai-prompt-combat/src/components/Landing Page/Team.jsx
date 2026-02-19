@@ -19,7 +19,7 @@ const coreLeaders = [
   {
     name: "Rounak Jain",
     role: "Technical Lead",
-    image: "/team/Kaggle Koders/Rounak_Jain_Technical Lead.png",
+    image: "/team/Kaggle Koders/Rounak_Jain_Technical Lead.jpeg",
   },
   {
     name: "Rishu Pandey",
@@ -93,7 +93,7 @@ const teamMembers1 = [
   {
     name: "Yash Vishwakarma",
     role: "Member",
-    image: "/team/Kaggle Koders/Yash vishwakarma.pdf",
+    image: "/team/Kaggle Koders/Yash_Vishwakarma.png",
   },
 ];
 
