@@ -97,7 +97,7 @@ const Prizes = () => {
           {/* =======================
               3RD PLACE (Bronze)
              ======================= */}
-          <motion.div 
+          {/* <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -105,7 +105,6 @@ const Prizes = () => {
             className="order-3 w-full md:w-75"
           >
             <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-[#CD7F32] transition-colors duration-300 h-100">
-              {/* Icon Circle */}
               <div className="w-16 h-16 rounded-full bg-linear-to-b from-[#CD7F32] to-[#8B4513] flex items-center justify-center mb-4 shadow-lg">
                 <Medal size={32} className="text-white fill-current" />
               </div>
@@ -121,7 +120,7 @@ const Prizes = () => {
                 <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Stickers</li>
               </ul>
             </div>
-          </motion.div>
+          </motion.div> */}
 
         </div>
 

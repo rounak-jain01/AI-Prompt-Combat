@@ -15,7 +15,7 @@ const HeroSection = () => {
     <section className="mt-5 relative h-screen min-h-150 flex items-center justify-center overflow-hidden bg-dark pt-16">
       
       {/* 1. BACKGROUND BANNER ANIMATION */}
-      <div className="absolute inset-0 overflow-hidden z-0">
+      {/* <div className="absolute inset-0 overflow-hidden z-0">
         <motion.div
           className="flex h-full w-[200%]"
           initial={{ x: 0 }}
@@ -27,7 +27,37 @@ const HeroSection = () => {
           <img src={bannerImage} alt="Background" className="h-full w-1/2 object-cover opacity-80" />
         </motion.div>
         <div className="absolute inset-0 bg-linear-to-b from-black via-black/80 to-black" />
-      </div>
+      </div> */}
+
+      {/* 1. BACKGROUND BANNER ANIMATION */}
+<div className="absolute inset-0 overflow-hidden z-0">
+  <motion.div
+    className="flex h-full w-max" // w-max ensures the container doesn't squeeze the images
+    initial={{ x: 0 }}
+    animate={{ x: "-50%" }} // Moves by exactly one image set
+    transition={{ 
+      duration: 30, // Adjusted for smoother speed
+      repeat: Infinity, 
+      ease: "linear" 
+    }}
+    style={{ willChange: "transform" }}
+  >
+    {/* Use h-full with w-auto to keep the 1600:270 aspect ratio */}
+    <img 
+      src={bannerImage} 
+      alt="Background" 
+      className="h-full w-auto flex-none opacity-80 object-contain" 
+    />
+    <img 
+      src={bannerImage} 
+      alt="Background" 
+      className="h-full w-auto flex-none opacity-80 object-contain" 
+    />
+  </motion.div>
+  
+  {/* Darker Overlay for better text readability */}
+  <div className="absolute inset-0 bg-gradient-to-b from-black via-black/60 to-black" />
+</div>
 
       {/* GLOW EFFECTS */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 bg-primary rounded-full blur-[100px] opacity-15 pointer-events-none z-0" />
