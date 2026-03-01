@@ -7,43 +7,76 @@ const events = [
   {
     id: 1,
     title: "AI Prompt Combat 1.0",
-    date: "Aug 2024",
-    location: "Main Auditorium",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop",
+    date: "April 2025",
+    location: "Sagar Group of Institutes",
+    image: "/glimse/AI Prompt Combat 1.0.jpg",
     category: "Flagship Event"
   },
   {
     id: 2,
-    title: "Kaggle Koders Hackathon",
-    date: "Dec 2024",
-    location: "SISTec Campus",
-    image: "https://images.unsplash.com/photo-1504384308090-c54be3855833?q=80&w=1862&auto=format&fit=crop",
-    category: "Hackathon"
+    title: "Abhiyanta",
+    date: "2023",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Abhiyanta 2023.heic",
+    category: "Event"
   },
   {
     id: 3,
-    title: "Tech-Talk: Future of AI",
-    date: "Oct 2024",
-    location: "Seminar Hall",
-    image: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?q=80&w=2070&auto=format&fit=crop",
-    category: "Seminar"
+    title: "AI Matrix",
+    date: "2024",
+    location: "Sagar Group of Institutes",
+    image: "glimse/AI Matrix 2024.heic",
+    category: "Event"
   },
   {
     id: 4,
-    title: "Code-War 2023",
-    date: "Nov 2023",
-    location: "Computer Labs",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
-    category: "Coding"
+    title: "Android Workshop",
+    date: "2025",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Android Workshop 2025.png",
+    category: "Workshop"
   },
   {
     id: 5,
-    title: "Web-Dev Workshop",
-    date: "Sep 2023",
-    location: "Virtual",
-    image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=2070&auto=format&fit=crop",
-    category: "Workshop"
-  }
+    title: "Inaugural Ceremony",
+    date: "2025",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Kaggle Koders 2025-26.jpg",
+    category: "Ceremony"
+  },
+  {
+    id: 6,
+    title: "Inaugural Ceremony",
+    date: "2024",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Kaggle Koders Badge 24-25.heic",
+    category: "Ceremony"
+  },
+  {
+    id: 7,
+    title: "Inaugural Ceremony",
+    date: "2023",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Kaggle Koders First Batch.heic",
+    category: "Ceremony"
+  },
+  {
+    id: 8,
+    title: "ML Model Matchup",
+    date: "2024",
+    location: "Sagar Group of Institutes",
+    image: "glimse/ML Model Matchup.heic",
+    category: "Event"
+  },
+  {
+    id: 9,
+    title: "Python Code Quest",
+    date: "2025",
+    location: "Sagar Group of Institutes",
+    image: "glimse/Python Code Quest 2025.heic",
+    category: "Competition"
+  },
+  
 ];
 
 const PastEvents = () => {
