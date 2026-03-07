@@ -1,55 +1,40 @@
 import os
 import json
+import requests
 from datetime import datetime
-import requests  # ✅ For HF Space call
-from fastapi import FastAPI, HTTPException, Header, Depends, Body, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-# --- FIREBASE IMPORTS ---
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
-
-# 1. Initialize Firebase (Smart Logic for Local vs Render)
+# --- FIREBASE INIT ---
 if not firebase_admin._apps:
-    firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
-    
-    if firebase_creds_json:
-        # PRODUCTION (Render)
-        cred_dict = json.loads(firebase_creds_json)
-        cred = credentials.Certificate(cred_dict)
-        print("✅ Firebase Loaded from Environment Variable")
+    cred_json = os.getenv("FIREBASE_CREDENTIALS")
+    if cred_json:
+        cred = credentials.Certificate(json.loads(cred_json))
+    elif os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
     else:
-        # LOCAL
-        if os.path.exists("serviceAccountKey.json"):
-            cred = credentials.Certificate("serviceAccountKey.json")
-            print("✅ Firebase Loaded from Local File")
-        else:
-            # Fallback
-            print("⚠️ Warning: serviceAccountKey.json not found.")
-            cred = None
-
+        cred = None
+    
     if cred:
         firebase_admin.initialize_app(cred)
 
-# Database Client
 db = firestore.client() if firebase_admin._apps else None
+# Performance Optimization: Global session for connection pooling
+session = requests.Session()
 
-# Init App
 app = FastAPI()
-
-# 2. Add CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# --- DATA MODELS ---
-
+# --- MODELS ---
 class EvaluateRequest(BaseModel):
     prompt: str
     pairId: int
@@ -67,427 +52,170 @@ class StartRoundRequest(BaseModel):
 class ResetUserRequest(BaseModel):
     targetUserId: str
 
-# ✅ NEW: Round 2 Submission Model
 class Round2Submission(BaseModel):
     videoUrl: str
     prompt: str
-
-# --- CONSTANTS ---
-TARGET_PROMPTS = {
-    1: "Solarpunk architecture with vertical gardens, lush greenery covering concrete, cascading waterfalls, futuristic sustainable design, bright sunlight, utopian atmosphere, organic shapes, high detail.",
-    2: "Surreal portrait made of bioluminescent blue liquid water, fluid form with splashing effects, translucent texture, glowing particles, ethereal fantasy style, dark background, magical atmosphere.",
-    3: "Massive steampunk space station shaped like a gear orbiting a planet, industrial sci-fi architecture, metallic details, cosmic background with stars, cinematic scale, intricate machinery.",
-    4: "Liminal space horror playground, foggy and abandoned atmosphere, rusted metal, muted desaturated colors, eerie lighting, unsettling vibe, haunted aesthetic.",
-    5: "Intricate 3D paper quilling art of a lion, layered paper strips with depth, vibrant colors, handmade craft texture, papercraft style, abstract artistic representation."
-}
-
-# --- HELPER FUNCTIONS ---
-
-def verify_token(authorization: str = Header(...)):
-    """
-    Extracts the Bearer Token from the header and verifies it with Firebase Auth.
-    Returns the User UID if valid.
-    """
-    try:
-        if not authorization.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Invalid Header Format")
-        
-        token = authorization.split("Bearer ")[1]
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token['uid']
-        return uid
-    except Exception as e:
-        print(f"Auth Error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid or Expired Token")
-
-def verify_admin(userId: str = Depends(verify_token)):
-    """
-    Checks if the authenticated user has 'admin' role.
-    """
-    user_doc = db.collection("users").document(userId).get()
-    if not user_doc.exists:
-        raise HTTPException(status_code=403, detail="User profile not found")
-    
-    data = user_doc.to_dict()
-    if data.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="🚫 Access Denied: Admins Only")
-    
-    return userId
-
-# --- ROUTES ---
-
-@app.get("/")
-def read_root():
-    return {"status": "Backend is Running 🚀"}
-
-@app.post("/api/start-round")
-def start_round(request: StartRoundRequest, userId: str = Depends(verify_token)):
-    """
-    Marks the user as having STARTED the round. 
-    Prevents re-entry if they refresh or leave.
-    """
-    print(f"🚦 User {userId} starting round {request.roundId}")
-    try:
-        user_ref = db.collection("users").document(userId)
-        user_doc = user_ref.get()
-        
-        if user_doc.exists:
-            data = user_doc.to_dict()
-            # Check if already submitted
-            if data.get(f"{request.roundId}_status") == "submitted":
-                 return {"success": False, "message": "Already submitted!"}
-            
-            # Mark as started
-            user_ref.update({
-                f"{request.roundId}_status": "started",
-                f"{request.roundId}_startTime": firestore.SERVER_TIMESTAMP
-            })
-            return {"success": True}
-        else:
-             raise HTTPException(status_code=404, detail="User not found")
-    except Exception as e:
-        print(f"Error starting round: {e}")
-        raise HTTPException(status_code=500, detail="Database Error")
-
-# ✅ Round 1 Evaluation Route
-@app.post("/api/evaluate")
-def evaluate_prompt(request: EvaluateRequest):
-    # 👇 Replace with YOUR HF Space URL
-    AI_ENGINE_URL = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate" 
-    
-    payload = {
-        "prompt": request.prompt,
-        "target": TARGET_PROMPTS.get(request.pairId, "")
-    }
-
-    try:
-        # Direct call to YOUR private server
-        response = requests.post(AI_ENGINE_URL, json=payload)
-        
-        if response.status_code == 200:
-            return {"success": True, **response.json()}
-        else:
-            print(f"HF Error: {response.status_code} - {response.text}")
-            return {"success": False, "score": 0, "feedback": ["AI Engine Error"]}
-            
-    except Exception as e:
-        print(f"Connection Error: {e}")
-        return {"success": True, "score": 0, "feedback": ["Server Busy, try again in 2s"]}
-
-# ✅ Round 1 Submission Route
-@app.post("/api/submit-round")
-def submit_round(request: RoundSubmissionRequest, userId: str = Depends(verify_token)):
-    print(f"📥 Processing Submission for UserUID: {userId} | Cheating: {request.isCheating}")
-    
-    try:
-        real_name = "Unknown Agent"
-        user_doc_ref = db.collection("users").document(userId)
-        user_doc = user_doc_ref.get()
-        
-        if user_doc.exists:
-            user_data = user_doc.to_dict()
-            real_name = user_data.get("fullName") or user_data.get("name") or "Anonymous"
-            
-            final_status = "disqualified" if request.isCheating else "submitted"
-
-            user_doc_ref.update({
-                "round1_status": final_status,
-                "round1_score": request.averageScore,
-                "round1_endTime": firestore.SERVER_TIMESTAMP,
-                "isFlagged": request.isCheating 
-            })
-
-        doc_data = request.dict()
-        doc_data["userId"] = userId
-        doc_data["username"] = real_name
-        doc_data["timestamp"] = firestore.SERVER_TIMESTAMP
-        doc_data["round"] = 1
-        doc_data["status"] = "disqualified" if request.isCheating else "valid"
-        
-        db.collection("leaderboard").document(userId).set(doc_data)
-        
-        return {"success": True, "message": "Score Saved!"}
-    
-    except Exception as e:
-        print(f"🔥 Database Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ==========================================
-# 🚀 NEW: ROUND 2 SUBMISSION ROUTE
-# ==========================================
-@app.post("/api/round2/submit")
-def submit_round2(submission: Round2Submission, userId: str = Depends(verify_token)):
-    """
-    Receives Video Link & Prompt from Cloudinary/Frontend.
-    Updates Firestore User Profile.
-    """
-    print(f"🎥 Round 2 Upload for User: {userId}")
-    
-    try:
-        user_ref = db.collection("users").document(userId)
-        
-        # Check if user exists
-        if not user_ref.get().exists:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        # Update User Document
-        user_ref.update({
-            "round2_status": "submitted",
-            "round2_video_link": submission.videoUrl,
-            "round2_prompt": submission.prompt,
-            "round2_submitted_at": firestore.SERVER_TIMESTAMP
-        })
-        
-        return {
-            "success": True, 
-            "message": "Round 2 Submission Recorded",
-            "status": "submitted"
-        }
-
-    except Exception as e:
-        print(f"Error submitting Round 2: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database Update Failed")
-
-
-# --- GENERAL USER ROUTES ---
-
-@app.get("/api/user-status")
-def get_user_status(userId: str = Depends(verify_token)):
-    try:
-        doc = db.collection("users").document(userId).get()
-        if doc.exists:
-            data = doc.to_dict()
-            return {
-                "success": True, 
-                "round1_status": data.get("round1_status", "pending"),
-                "round2_status": data.get("round2_status", "pending") # Added Round 2 status check
-            }
-        return {"success": False, "message": "User not found"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/leaderboard")
-def get_leaderboard():
-    try:
-        docs = db.collection("leaderboard")\
-                 .order_by("averageScore", direction=firestore.Query.DESCENDING)\
-                 .limit(50)\
-                 .stream()
-        
-        leaderboard_data = []
-        for doc in docs:
-            data = doc.to_dict()
-            if "timestamp" in data and data["timestamp"]:
-                 data["timestamp"] = str(data["timestamp"])
-            leaderboard_data.append(data)
-            
-        return {"success": True, "leaderboard": leaderboard_data}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-# ==========================
-# 👑 ADMIN PANEL ROUTES
-# ==========================
-
-@app.get("/api/admin/stats")
-def get_admin_stats(adminId: str = Depends(verify_admin)):
-    try:
-        users_ref = db.collection("users")
-        all_users = users_ref.stream()
-        
-        stats = {
-            "total": 0, 
-            "round1_active": 0, "round1_submitted": 0, 
-            "round2_submitted": 0,
-            "disqualified": 0
-        }
-        
-        for doc in all_users:
-            data = doc.to_dict()
-            stats["total"] += 1
-            
-            r1_status = data.get("round1_status", "pending")
-            r2_status = data.get("round2_status", "pending")
-
-            if r1_status == "started": stats["round1_active"] += 1
-            elif r1_status == "submitted": stats["round1_submitted"] += 1
-            elif r1_status == "disqualified": stats["disqualified"] += 1
-            
-            if r2_status == "submitted": stats["round2_submitted"] += 1
-                
-        return {"success": True, "stats": stats}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/admin/users")
-def get_all_users(adminId: str = Depends(verify_admin)):
-    try:
-        users_ref = db.collection("users")
-        docs = users_ref.stream()
-        
-        users_list = []
-        for doc in docs:
-            data = doc.to_dict()
-            safe_data = {
-                "userId": doc.id,
-                "name": data.get("fullName", "Unknown"),
-                "email": data.get("email", "No Email"),
-                "status": data.get("round1_status", "pending"),
-                "round2_status": data.get("round2_status", "pending"), # Added for Admin View
-                "round2_video_link": data.get("round2_video_link", ""), # Admin can see link
-                "score": data.get("round1_score", 0),
-                "isFlagged": data.get("isFlagged", False),
-                "role": data.get("role", "student")
-            }
-            users_list.append(safe_data)
-            
-        return {"success": True, "users": users_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/admin/reset-user")
-def reset_user(request: ResetUserRequest, adminId: str = Depends(verify_admin)):
-    print(f"⚡ Admin {adminId} is resetting User {request.targetUserId}")
-    try:
-        # 1. Reset User Profile Status (Both Rounds)
-        db.collection("users").document(request.targetUserId).update({
-            "round1_status": "pending",
-            "round1_score": 0,
-            "round2_status": "pending",
-            "round2_video_link": firestore.DELETE_FIELD,
-            "round2_prompt": firestore.DELETE_FIELD,
-            "isFlagged": False,
-            "round1_startTime": firestore.DELETE_FIELD,
-            "round1_endTime": firestore.DELETE_FIELD,
-            "round2_submitted_at": firestore.DELETE_FIELD
-        })
-        
-        # 2. Remove from Leaderboard
-        db.collection("leaderboard").document(request.targetUserId).delete()
-        
-        return {"success": True, "message": "User access fully restored!"}
-    except Exception as e:
-        print(f"Error resetting user: {e}")
-        raise HTTPException(status_code=500, detail="Failed to reset user")
-    
-
-# ==========================================
-# 🚀 ROUND 2 SUBMISSION ROUTE (DB UPDATE)
-# ==========================================
-@app.post("/api/round2/submit")
-def submit_round2(submission: Round2Submission, userId: str = Depends(verify_token)):
-    """
-    Saves Round 2 Data to Firestore.
-    Fields Saved:
-    - round2_video_link: Cloudinary URL
-    - round2_prompt: User's Prompt (Crucial for Judging)
-    - round2_status: 'submitted'
-    - round2_submitted_at: Server Timestamp (For tie-breaking)
-    """
-    print(f"🎥 Round 2 Submission for User: {userId}")
-    
-    try:
-        user_ref = db.collection("users").document(userId)
-        
-        # Check if user exists
-        if not user_ref.get().exists:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        # ✅ Update Database with Competition Data
-        user_ref.update({
-            "round2_status": "submitted",           # Mark as Done
-            "round2_video_link": submission.videoUrl, # Save Video
-            "round2_prompt": submission.prompt,       # Save Prompt
-            "round2_submitted_at": firestore.SERVER_TIMESTAMP, # Exact Time (Fairness)
-            "round2_score": 0 # Initialize Score (Optional, for later manual judging)
-        })
-        
-        return {
-            "success": True, 
-            "message": "Round 2 Submission Recorded",
-            "status": "submitted"
-        }
-
-    except Exception as e:
-        print(f"Error submitting Round 2: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database Update Failed")
-
 
 class AddUserModel(BaseModel):
     email: str
     fullName: str
     role: str = "student"
 
-@app.post("/api/admin/add-user")
-def add_user_by_admin(data: AddUserModel, current_user: str = Depends(verify_token)):
-    """
-    1. Creates User in Firebase Authentication.
-    2. Creates User Profile in Firestore.
-    3. Generates a Password Setup Link.
-    """
-    # Check if requester is admin (Optional: Add logic to verify current_user role)
-    
+# --- CONSTANTS ---
+TARGET_PROMPTS = {
+    1: "Solarpunk architecture with vertical gardens...",
+    2: "Surreal portrait made of bioluminescent blue liquid...",
+    3: "Massive steampunk space station shaped like a gear...",
+    4: "Liminal space horror playground, foggy...",
+    5: "Intricate 3D paper quilling art of a lion..."
+}
+
+# --- DEPENDENCIES ---
+def verify_token(authorization: str = Header(...)):
     try:
-        # 1. Create User in Firebase Auth
-        user = auth.create_user(
-            email=data.email,
-            display_name=data.fullName,
-            email_verified=True # Auto-verify since Admin added them
-        )
+        token = authorization.split("Bearer ")[1]
+        decoded = auth.verify_id_token(token)
+        return decoded['uid']
+    except:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+
+def verify_admin(uid: str = Depends(verify_token)):
+    user = db.collection("users").document(uid).get()
+    if not user.exists or user.to_dict().get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admins Only")
+    return uid
+
+# --- ROUTES ---
+
+@app.get("/")
+def health():
+    return {"status": "online"}
+
+@app.post("/api/start-round")
+def start_round(req: StartRoundRequest, uid: str = Depends(verify_token)):
+    ref = db.collection("users").document(uid)
+    doc = ref.get()
+    if doc.exists and doc.to_dict().get(f"{req.roundId}_status") == "submitted":
+        return {"success": False, "message": "Already submitted"}
+    
+    ref.update({
+        f"{req.roundId}_status": "started",
+        f"{req.roundId}_startTime": firestore.SERVER_TIMESTAMP
+    })
+    return {"success": True}
+
+@app.post("/api/evaluate")
+def evaluate_prompt(req: EvaluateRequest):
+    url = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate"
+    payload = {"prompt": req.prompt, "target": TARGET_PROMPTS.get(req.pairId, "")}
+    try:
+        # Optimized: Use session instead of requests.post
+        res = session.post(url, json=payload, timeout=10)
+        return {"success": True, **res.json()} if res.status_code == 200 else {"success": False, "score": 0}
+    except:
+        return {"success": False, "score": 0}
+
+@app.post("/api/submit-round")
+def submit_round1(req: RoundSubmissionRequest, uid: str = Depends(verify_token)):
+    try:
+        user_ref = db.collection("users").document(uid)
+        user_data = user_ref.get().to_dict() or {}
+        name = user_data.get("fullName") or "Anonymous"
+        status = "disqualified" if req.isCheating else "submitted"
+
+        # Optimization: Use Batch for multiple collection updates
+        batch = db.batch()
+        batch.update(user_ref, {
+            "round1_status": status,
+            "round1_score": req.averageScore,
+            "round1_endTime": firestore.SERVER_TIMESTAMP,
+            "isFlagged": req.isCheating 
+        })
         
-        # 2. Create User Entry in Firestore
-        user_data = {
-            "fullName": data.fullName,
-            "email": data.email,
-            "role": data.role,
-            "round1_status": "pending",
-            "round2_status": "pending",
-            "round1_score": 0,
-            "round2_score": 0,
-            "createdAt": firestore.SERVER_TIMESTAMP
-        }
-        db.collection("users").document(user.uid).set(user_data)
-
-        # 3. Generate Password Reset Link (Invite Link)
-        # Yeh link user ko password set karne ki permission dega
-        reset_link = auth.generate_password_reset_link(data.email)
-
-        return {
-            "success": True, 
-            "message": "User created successfully!",
-            "uid": user.uid,
-            "inviteLink": reset_link # Frontend par show karenge
-        }
-
-    except auth.EmailAlreadyExistsError:
-        raise HTTPException(status_code=400, detail="Email already exists in Authentication.")
+        lead_ref = db.collection("leaderboard").document(uid)
+        batch.set(lead_ref, {
+            **req.dict(),
+            "userId": uid,
+            "username": name,
+            "timestamp": firestore.SERVER_TIMESTAMP,
+            "status": "valid" if not req.isCheating else "disqualified"
+        })
+        batch.commit()
+        return {"success": True}
     except Exception as e:
-        print(f"Error adding user: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/round2/submit")
+def submit_round2(req: Round2Submission, uid: str = Depends(verify_token)):
+    ref = db.collection("users").document(uid)
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    ref.update({
+        "round2_status": "submitted",
+        "round2_video_link": req.videoUrl,
+        "round2_prompt": req.prompt,
+        "round2_submitted_at": firestore.SERVER_TIMESTAMP
+    })
+    return {"success": True}
+
+@app.get("/api/user-status")
+def get_status(uid: str = Depends(verify_token)):
+    doc = db.collection("users").document(uid).get()
+    if not doc.exists: return {"success": False}
+    data = doc.to_dict()
+    return {
+        "success": True,
+        "round1_status": data.get("round1_status", "pending"),
+        "round2_status": data.get("round2_status", "pending")
+    }
+
+# --- ADMIN ROUTES ---
+
+@app.get("/api/admin/stats")
+def get_stats(_: str = Depends(verify_admin)):
+    users = db.collection("users").stream()
+    stats = {"total": 0, "r1_sub": 0, "r2_sub": 0, "flagged": 0}
+    for u in users:
+        d = u.to_dict()
+        stats["total"] += 1
+        if d.get("round1_status") == "submitted": stats["r1_sub"] += 1
+        if d.get("round2_status") == "submitted": stats["r2_sub"] += 1
+        if d.get("isFlagged"): stats["flagged"] += 1
+    return {"success": True, "stats": stats}
+
+@app.post("/api/admin/reset-user")
+def reset_user(req: ResetUserRequest, _: str = Depends(verify_admin)):
+    # Optimization: Atomic deletion/update using Batch
+    batch = db.batch()
+    u_ref = db.collection("users").document(req.targetUserId)
+    batch.update(u_ref, {
+        "round1_status": "pending", "round1_score": 0, "round2_status": "pending",
+        "isFlagged": False, "round2_video_link": firestore.DELETE_FIELD,
+        "round1_startTime": firestore.DELETE_FIELD, "round2_submitted_at": firestore.DELETE_FIELD
+    })
+    batch.delete(db.collection("leaderboard").document(req.targetUserId))
+    batch.commit()
+    return {"success": True}
+
+@app.post("/api/admin/add-user")
+def add_user(data: AddUserModel, _: str = Depends(verify_admin)):
+    try:
+        new_auth = auth.create_user(email=data.email, display_name=data.fullName, email_verified=True)
+        db.collection("users").document(new_auth.uid).set({
+            **data.dict(), "round1_status": "pending", "round2_status": "pending",
+            "createdAt": firestore.SERVER_TIMESTAMP
+        })
+        return {"success": True, "inviteLink": auth.generate_password_reset_link(data.email)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.delete("/api/admin/delete-user/{target_uid}")
-def delete_user_by_admin(target_uid: str, current_user: str = Depends(verify_token)):
-    """
-    Deletes the user ENTIRELY from Firebase Authentication AND Firestore.
-    """
-    try:
-        # 1. Delete from Firebase Authentication (Login System)
-        try:
-            auth.delete_user(target_uid)
-        except auth.UserNotFoundError:
-            pass # Agar auth mein nahi hai, toh aage badho
-
-        # 2. Delete from Firestore Database
-        db.collection("users").document(target_uid).delete()
-        
-        # (Optional) Agar koi alag leaderboard table banayi hai toh usse bhi udao
-        try:
-            db.collection("leaderboard").document(target_uid).delete()
-        except:
-            pass
-            
-        return {"success": True, "message": "User completely obliterated from system."}
-
-    except Exception as e:
-        print(f"Error completely deleting user: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+def delete_user(target_uid: str, _: str = Depends(verify_admin)):
+    batch = db.batch()
+    batch.delete(db.collection("users").document(target_uid))
+    batch.delete(db.collection("leaderboard").document(target_uid))
+    try: auth.delete_user(target_uid)
+    except: pass
+    batch.commit()
+    return {"success": True}
