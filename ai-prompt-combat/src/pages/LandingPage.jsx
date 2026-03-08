@@ -13,6 +13,7 @@ import Team from '../components/Landing Page/Team';
 import Footer from '../components/Landing Page/Footer';
 import TutorialVideo from '../components/Landing Page/TutorialVideo';
 import EventDetails from '../components/Landing Page/EventDetails';
+import Faculty from '../components/Landing Page/Faculty';
 
 const LandingPage = () => {
   return (
@@ -26,6 +27,7 @@ const LandingPage = () => {
       <div id="prizes"><Prizes /></div>
       <div id="details"><EventDetails /></div>
       <div id="organizers"><Organizers /></div>
+      <div id="faculty"><Faculty /></div>
       <div id="team"><Team /></div>
       <div id="contact"><Footer /></div>
     </div>
