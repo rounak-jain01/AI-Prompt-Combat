@@ -245,7 +245,7 @@ const Team = () => {
             Meet Our <span className="text-primary">Team</span>
           </h2>
           <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">
-            The passionate individuals behind AI Prompt Combat, dedicated to
+            The passionate individuals behind AI Prompt Combat 2.0, dedicated to
             making this event a success.
           </p>
         </div>

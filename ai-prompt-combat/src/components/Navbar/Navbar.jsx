@@ -40,6 +40,8 @@ const Navbar = () => {
     { name: 'About', href: '/#about' },
     { name: 'Timeline', href: '/#timeline' },
     { name: 'Prizes', href: '/#prizes' },
+    { name: 'Details', href: '/#details' },
+    { name: 'Team', href: '/#organizers' },
   ];
 
   return (
@@ -62,7 +64,7 @@ const Navbar = () => {
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <span className="text-white font-bold text-lg tracking-wide hidden md:block group-hover:text-primary transition-colors">
-                AI PROMPT COMBAT
+                AI PROMPT COMBAT 2.0
               </span>
             </Link>
 
