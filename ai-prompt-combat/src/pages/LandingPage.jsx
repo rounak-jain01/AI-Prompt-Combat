@@ -12,6 +12,7 @@ import Organizers from '../components/Landing Page/Organizers';
 import Team from '../components/Landing Page/Team';
 import Footer from '../components/Landing Page/Footer';
 import TutorialVideo from '../components/Landing Page/TutorialVideo';
+import EventDetails from '../components/Landing Page/EventDetails';
 
 const LandingPage = () => {
   return (
@@ -23,6 +24,7 @@ const LandingPage = () => {
       <div id="timeline"><ImportantDates /></div>
       <div id="legacy"><PastEvents /></div>
       <div id="prizes"><Prizes /></div>
+      <div id="details"><EventDetails /></div>
       <div id="organizers"><Organizers /></div>
       <div id="team"><Team /></div>
       <div id="contact"><Footer /></div>

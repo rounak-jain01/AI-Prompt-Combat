@@ -48,7 +48,7 @@ const Prizes = () => {
             <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-gray-500 transition-colors duration-300 h-100">
               {/* Icon Circle */}
               <div className="w-16 h-16 rounded-full bg-linear-to-b from-gray-300 to-gray-500 flex items-center justify-center mb-4 shadow-lg">
-                <Trophy size={32} className="text-black fill-current" />
+                <Trophy size={32} className="text-white fill-current" />
               </div>
               
               <h3 className="text-2xl font-bold text-white">2nd Place</h3>
