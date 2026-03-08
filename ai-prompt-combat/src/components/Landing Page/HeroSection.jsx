@@ -86,26 +86,33 @@ const HeroSection = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="font-display font-black uppercase tracking-tighter leading-none drop-shadow-2xl mb-4"
+            className="font-display font-black uppercase tracking-tighter leading-none drop-shadow-2xl mb-2"
           >
             <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               A.I.&nbsp;
             </span>
-            <span className="hidden md:inline"></span>
             <span className="text-4xl md:text-6xl lg:text-7xl gold-text text-glow block md:inline drop-shadow-[0_0_30px_rgba(212,175,55,0.6)]">
                PROMPT
             </span>
             <br className="hidden md:block" />
-            <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline mt-1 md:mt-0">
-              COMBAT
+            <span className="text-4xl md:text-6xl lg:text-7xl text-white block md:inline mt-1 md:mt-0 md:inline-flex md:items-baseline">
+              COMBAT <span className="text-primary text-4xl md:text-6xl lg:text-7xl md:align-baseline ml-1 md:ml-2">2.0</span>
             </span>
           </motion.h1>
 
-          {/* Tagline  */}
+          {/* Date & Tagline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="text-sm md:text-base text-primary font-semibold mb-1"
+          >
+            2nd April · 11:00 AM – 1:00 PM
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
             className="text-base md:text-xl text-gray-300 mb-8 max-w-xl mx-auto font-medium tracking-wide"
           >
             Where Creativity Meets <span className="text-primary font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">Precision</span>
@@ -143,9 +150,9 @@ const HeroSection = () => {
             className="grid grid-cols-3 gap-4 max-w-2xl mx-auto"
           >
             {[
-              { icon: Users, value: "200+", label: "Participants" },
-              { icon: Trophy, value: "₹5K", label: "Prize Pool" },
-              { icon: Zap, value: "2", label: "Rounds" },
+              { icon: Trophy, value: "₹10K", label: "Prize Pool" },
+              { icon: Zap, value: "2 hrs", label: "Duration" },
+              { icon: Users, value: "2", label: "Rounds" },
             ].map((stat, index) => (
               <div key={index} className="p-3 md:p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm flex flex-col items-center hover:-translate-y-1 hover:border-primary/30 transition-all duration-300">
                 <stat.icon className="w-5 h-5 text-primary mb-1 drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
