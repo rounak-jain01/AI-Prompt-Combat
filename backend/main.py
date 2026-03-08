@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
+from sentence_transformers import SentenceTransformer, util
 
 # --- FIREBASE INIT ---
 if not firebase_admin._apps:
@@ -26,6 +27,9 @@ db = firestore.client() if firebase_admin._apps else None
 session = requests.Session()
 
 app = FastAPI()
+print("Loading Sentence Transformer Model...")
+ai_model = SentenceTransformer('all-MiniLM-L6-v2')
+print("Model Loaded Successfully!")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -104,32 +108,47 @@ def start_round(req: StartRoundRequest, uid: str = Depends(verify_token)):
     })
     return {"success": True}
 
+
 @app.post("/api/evaluate")
 def evaluate_prompt(req: EvaluateRequest):
-    url = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate"
-    payload = {"prompt": req.prompt, "target": TARGET_PROMPTS.get(req.pairId, "")}
+    target_prompt = TARGET_PROMPTS.get(req.pairId, "")
     
-    try:
-        # Timeout 45 seconds kiya hai taaki agar HF model sleep par ho, toh usko jaagne ka time mile
-        res = session.post(url, json=payload, timeout=45)
+    if not target_prompt:
+        return {"success": False, "score": 0, "message": "Invalid Target Pair ID"}
         
-        if res.status_code == 200:
-            data = res.json()
-            # Dhyan rahe ki frontend ko feedback array aur score proper format mein mile
-            return {
-                "success": True, 
-                "score": data.get("score", 0), 
-                "feedback": data.get("feedback", [])
-            }
+    try:
+        # User aur Target prompt ko AI embeddings (numbers) mein convert karein
+        embedding_user = ai_model.encode(req.prompt, convert_to_tensor=True)
+        embedding_target = ai_model.encode(target_prompt, convert_to_tensor=True)
+        
+        # Dono ke beech ka match (Cosine Similarity) nikalein
+        cosine_score = util.cos_sim(embedding_user, embedding_target).item()
+        
+        # Score ko 0-100 percentage mein convert karein
+        final_score = max(0, min(100, int(cosine_score * 100)))
+        
+        # Feedback generate karein
+        feedback = []
+        if final_score >= 85:
+            feedback.append("Excellent match! Your prompt is highly accurate.")
+        elif final_score >= 60:
+            feedback.append("Good attempt, but missing some specific details.")
+            feedback.append("Try to add more descriptive keywords.")
         else:
-            # Agar Hugging Face ne 500, 503 ya 404 error diya toh terminal mein print hoga
-            print(f"HF Error Status: {res.status_code}, Response: {res.text}")
-            return {"success": False, "score": 0, "message": f"AI Engine Error ({res.status_code}). Server might be asleep."}
-            
+            feedback.append("Low accuracy. The AI could not find the core subjects.")
+            feedback.append("Focus on the main elements and art style of the image.")
+
+        return {
+            "success": True, 
+            "score": final_score, 
+            "feedback": feedback
+        }
+        
     except Exception as e:
-        # Asli bimari yahan print hogi (e.g., requests.exceptions.Timeout)
-        print(f"Evaluate Endpoint Failed: {str(e)}")
-        return {"success": False, "score": 0, "message": "AI is waking up or overloaded. Please try again in 30 seconds."}
+        print(f"AI Evaluation Error: {str(e)}")
+        return {"success": False, "score": 0, "message": "Internal AI Processing Error"}
+
+
 @app.post("/api/submit-round")
 def submit_round1(req: RoundSubmissionRequest, uid: str = Depends(verify_token)):
     try:
