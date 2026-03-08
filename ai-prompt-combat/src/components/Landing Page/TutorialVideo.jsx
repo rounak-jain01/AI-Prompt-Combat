@@ -71,9 +71,9 @@ const TutorialVideo = () => {
                     <Play size={36} className="text-primary" />
                   </div>
                   <p className="text-center font-medium text-white/80 mb-1">Tutorial video coming soon</p>
-                  <p className="text-center text-sm text-gray-500 max-w-sm">
+                  {/* <p className="text-center text-sm text-gray-500 max-w-sm">
                     Add your YouTube video ID in <code className="text-primary/80">TutorialVideo.jsx</code> (YOUTUBE_VIDEO_ID) to display it here.
-                  </p>
+                  </p> */}
                 </div>
               )}
             </div>
