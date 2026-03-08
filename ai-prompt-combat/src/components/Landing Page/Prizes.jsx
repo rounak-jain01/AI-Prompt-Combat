@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Crown, Gift, CheckCircle, ShieldCheck, Star } from 'lucide-react';
+import { Trophy, Medal, Crown, Gift, CheckCircle, ShieldCheck, Star, MedalIcon } from 'lucide-react';
 
 const Prizes = () => {
   return (
@@ -12,13 +12,14 @@ const Prizes = () => {
       <div className="container mx-auto px-4 relative z-10">
         
         {/* HEADER */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <span className="text-[#FFD700] font-bold tracking-[0.2em] uppercase text-xs md:text-sm mb-2 block">
             Rewards
           </span>
           <h2 className="text-4xl md:text-5xl font-display font-bold text-white flex items-center justify-center gap-3">
             Prizes & <span className="text-[#FFD700]">Recognition</span>
           </h2>
+          <p className="text-gray-400 text-sm mt-2">Total Prize Pool: <span className="text-[#FFD700] font-bold">₹10,000</span> · Entry Fee: <span className="text-white font-semibold">₹199</span></p>
         </div>
 
         {/* CROWN ICON  */}
@@ -47,57 +48,44 @@ const Prizes = () => {
             <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-gray-500 transition-colors duration-300 h-100">
               {/* Icon Circle */}
               <div className="w-16 h-16 rounded-full bg-linear-to-b from-gray-300 to-gray-500 flex items-center justify-center mb-4 shadow-lg">
-                <Medal size={32} className="text-black fill-current" />
+                <Trophy size={32} className="text-black fill-current" />
               </div>
               
               <h3 className="text-2xl font-bold text-white">2nd Place</h3>
               <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Runner Up</p>
               
-              <div className="text-4xl font-black text-gray-300 mb-8">₹2,000</div>
+              <div className="text-4xl font-black text-gray-300 mb-8">₹3,000</div>
               
               <ul className="space-y-3 w-full text-left pl-4">
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Silver Medal</li>
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Certificate</li>
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Swags</li>
+                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Trophy</li>
+                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Certificate (Hard Copy)</li>
               </ul>
             </div>
           </motion.div>
 
-          {/* =======================
-              1ST PLACE (Gold) - Center
-             ======================= */}
+          {/* 1ST PLACE (Gold) - Center */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="order-1 md:order-2 w-full md:w-87.5 relative z-10"
           >
-            {/* Main Gold Card */}
             <div className="relative bg-[#0A0A0A] rounded-3xl border-2 border-[#FFD700] p-8 flex flex-col items-center text-center h-115 shadow-[0_0_30px_-10px_rgba(255,215,0,0.3)]">
-              
-              {/* Icon Circle */}
               <div className="w-20 h-20 rounded-full bg-linear-to-b from-[#FFD700] to-[#B8860B] flex items-center justify-center mb-4 shadow-lg shadow-[#FFD700]/20">
                 <Trophy size={40} className="text-black fill-current" />
               </div>
-              
               <h3 className="text-3xl font-bold text-white">1st Place</h3>
               <p className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-8">Champion</p>
-              
-              <div className="text-5xl font-black text-[#FFD700] mb-8">₹3,000</div>
-              
+              <div className="text-5xl font-black text-[#FFD700] mb-8">₹5,000</div>
               <ul className="space-y-4 w-full text-left pl-6">
                 <li className="flex items-center gap-2 text-white text-sm"><Star size={16} className="text-[#FFD700] fill-[#FFD700]" /> <b>Gold Trophy</b></li>
-                <li className="flex items-center gap-2 text-gray-300 text-sm"><Star size={16} className="text-[#FFD700]" /> Excellence Cert.</li>
-                <li className="flex items-center gap-2 text-gray-300 text-sm"><Star size={16} className="text-[#FFD700]" /> Premium Merch</li>
-                <li className="flex items-center gap-2 text-gray-300 text-sm"><Star size={16} className="text-[#FFD700]" /> LinkedIn Feature</li>
+                <li className="flex items-center gap-2 text-gray-300 text-sm"><Star size={16} className="text-[#FFD700]" /> Certificate (Hard Copy)</li>
               </ul>
             </div>
           </motion.div>
 
-          {/* =======================
-              3RD PLACE (Bronze)
-             ======================= */}
-          {/* <motion.div 
+          {/* 3RD PLACE (Bronze) */}
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -106,21 +94,17 @@ const Prizes = () => {
           >
             <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center hover:border-[#CD7F32] transition-colors duration-300 h-100">
               <div className="w-16 h-16 rounded-full bg-linear-to-b from-[#CD7F32] to-[#8B4513] flex items-center justify-center mb-4 shadow-lg">
-                <Medal size={32} className="text-white fill-current" />
+                <Trophy size={32} className="text-white fill-current" />
               </div>
-              
               <h3 className="text-2xl font-bold text-white">3rd Place</h3>
               <p className="text-[#CD7F32] text-xs font-bold uppercase tracking-widest mb-6">Second Runner Up</p>
-              
-              <div className="text-4xl font-black text-[#E8C39E] mb-8">Goodies</div>
-              
+              <div className="text-4xl font-black text-[#E8C39E] mb-8">₹2,000</div>
               <ul className="space-y-3 w-full text-left pl-4">
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Bronze Medal</li>
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Certificate</li>
-                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Stickers</li>
+                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Trophy</li>
+                <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Certificate (Hard Copy)</li>
               </ul>
             </div>
-          </motion.div> */}
+          </motion.div>
 
         </div>
 
@@ -139,12 +123,12 @@ const Prizes = () => {
             </div>
 
             <div className="flex flex-wrap justify-center gap-3">
-              <button className="px-4 py-2 rounded-lg bg-black border border-white/10 text-sm text-gray-300 flex items-center gap-2 hover:border-[#FFD700] transition-colors">
-                <ShieldCheck size={14} className="text-[#FFD700]" /> E-Certificate
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-black border border-white/10 text-sm text-gray-300 flex items-center gap-2 hover:border-[#FFD700] transition-colors">
-                <ShieldCheck size={14} className="text-[#FFD700]" /> Community Access
-              </button>
+              <span className="px-4 py-2 rounded-lg bg-black border border-white/10 text-sm text-gray-300 flex items-center gap-2">
+                <ShieldCheck size={14} className="text-[#FFD700]" /> E-Certificates for all participants
+              </span>
+              <span className="px-4 py-2 rounded-lg bg-black border border-white/10 text-sm text-gray-300 flex items-center gap-2">
+                <Trophy size={14} className="text-[#FFD700]" /> Trophies for top 3
+              </span>
             </div>
 
           </div>

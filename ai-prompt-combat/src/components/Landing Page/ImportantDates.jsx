@@ -1,40 +1,33 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, UserPlus, Swords, Filter, Trophy } from 'lucide-react';
+import { Calendar, Clock, UserPlus, Swords, Trophy, Award } from 'lucide-react';
 
 const events = [
   {
-    date: "Jan 15 - Jan 25",
-    title: "Registration Opens",
-    description: "Sign up and prepare for the ultimate prompt engineering challenge.",
+    date: "11:00 AM",
+    title: "Reporting Time",
+    description: "All participants report to the venue. Check-in and briefing.",
     icon: UserPlus,
     color: "#D4AF37"
   },
   {
-    date: "Jan 28",
-    title: "Round 1 Begins",
-    description: "All participants compete in the initial prompt engineering challenge.",
+    date: "11:15 AM – 11:45 AM",
+    title: "Round 1: AI Image Generation",
+    description: "Create high-fidelity images from complex prompts. Scores updated on the live leaderboard.",
     icon: Swords,
     color: "#F4CF57"
   },
   {
-    date: "Jan 30",
-    title: "Shortlisting",
-    description: "Top performers are selected to advance to the final round.",
-    icon: Filter,
+    date: "12:00 PM – 12:30 PM",
+    title: "Round 2: AI Video Generation",
+    description: "Qualified finalists create video artifacts. Submit video URL and prompt via the portal.",
+    icon: Swords,
     color: "#D4AF37"
   },
   {
-    date: "Feb 2",
-    title: "Round 2 Finals",
-    description: "Elite competitors face advanced challenges in the final showdown.",
-    icon: Swords,
-    color: "#F4CF57"
-  },
-  {
-    date: "Feb 5",
-    title: "Winners Announced",
-    description: "Champions are crowned and prizes distributed.",
+    date: "12:45 PM – 1:00 PM",
+    title: "Felicitation",
+    description: "Winners announced. Prizes and certificates distributed.",
     icon: Trophy,
     color: "#FFD700"
   }
@@ -43,24 +36,19 @@ const events = [
 const ImportantDates = () => {
   return (
     <section className="relative py-24 bg-dark overflow-hidden">
-      
-      {/* Background Ambience */}
       <div className="absolute top-1/2 left-0 w-100 h-200 bg-primary rounded-full blur-[200px] opacity-5 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
-        
-        {/* HEADER */}
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.span 
+          <motion.span
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-primary font-bold tracking-[0.2em] uppercase text-sm mb-4 block"
           >
-            Event Timeline
+            Event Schedule
           </motion.span>
-          
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -69,22 +57,20 @@ const ImportantDates = () => {
           >
             Important <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-[#F4CF57]">Dates</span>
           </motion.h2>
-          
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
             className="text-gray-400 text-lg"
           >
-            Mark your calendar and don't miss any key milestones in the competition.
+            <span className="inline-flex items-center gap-2 text-primary font-semibold">
+              <Calendar size={20} /> 2nd April · 11:00 AM to 1:00 PM (2 Hours)
+            </span>
           </motion.p>
         </div>
 
-        {/* TIMELINE CONTAINER */}
         <div className="relative max-w-5xl mx-auto">
-          
-          {/* VERTICAL GLOWING LINE  */}
           <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 md:-ml-0.5 bg-linear-to-b from-transparent via-primary/50 to-transparent shadow-[0_0_15px_#D4AF37]" />
 
           <div className="space-y-12">
@@ -99,49 +85,34 @@ const ImportantDates = () => {
                   index % 2 === 0 ? "md:flex-row-reverse" : ""
                 }`}
               >
-                
-                {/* 1. CONTENT CARD */}
                 <div className="w-full md:w-[calc(50%-40px)] pl-20 md:pl-0">
                   <div className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.2)] backdrop-blur-sm overflow-hidden">
-                    
-                    {/* Hover Glow */}
                     <div className="absolute inset-0 bg-linear-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
                     <div className="relative z-10">
-                      {/* Date Badge */}
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold mb-4">
-                        <Calendar size={12} />
+                        <Clock size={12} />
                         {event.date}
                       </div>
-
-                      {/* Title & Icon */}
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
                           {event.title}
                         </h3>
                         <event.icon className="w-6 h-6 text-gray-500 group-hover:text-primary transition-colors" />
                       </div>
-
                       <p className="text-gray-400 text-sm leading-relaxed">
                         {event.description}
                       </p>
                     </div>
                   </div>
                 </div>
-
-                {/* 2. CENTER NODE (Dot) */}
                 <div className="absolute left-8 md:left-1/2 -translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-dark border-2 border-primary shadow-[0_0_15px_#D4AF37] z-20">
                   <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
                 </div>
-
-                {/* 3. EMPTY SPACE  */}
                 <div className="hidden md:block w-[calc(50%-40px)]" />
-                
               </motion.div>
             ))}
           </div>
         </div>
-
       </div>
     </section>
   );
