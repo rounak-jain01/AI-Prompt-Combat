@@ -1,6 +1,5 @@
 import os
 import json
-import requests
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,7 +23,6 @@ if not firebase_admin._apps:
 
 db = firestore.client() if firebase_admin._apps else None
 # Performance Optimization: Global session for connection pooling
-session = requests.Session()
 
 app = FastAPI()
 print("Loading Sentence Transformer Model...")
@@ -67,11 +65,11 @@ class AddUserModel(BaseModel):
 
 # --- CONSTANTS ---
 TARGET_PROMPTS = {
-    1: "Solarpunk architecture with vertical gardens...",
-    2: "Surreal portrait made of bioluminescent blue liquid...",
-    3: "Massive steampunk space station shaped like a gear...",
-    4: "Liminal space horror playground, foggy...",
-    5: "Intricate 3D paper quilling art of a lion..."
+    1: "Solarpunk architecture with vertical gardens, lush greenery covering concrete, cascading waterfalls, futuristic sustainable design, bright sunlight, utopian atmosphere, organic shapes, high detail.",
+    2: "Surreal portrait made of bioluminescent blue liquid water, fluid form with splashing effects, translucent texture, glowing particles, ethereal fantasy style, dark background, magical atmosphere.",
+    3: "Massive steampunk space station shaped like a gear orbiting a planet, industrial sci-fi architecture, metallic details, cosmic background with stars, cinematic scale, intricate machinery.",
+    4: "Liminal space horror playground, foggy and abandoned atmosphere, rusted metal, muted desaturated colors, eerie lighting, unsettling vibe, haunted aesthetic.",
+    5: "Intricate 3D paper quilling art of a lion, layered paper strips with depth, vibrant colors, handmade craft texture, papercraft style, abstract artistic representation."
 }
 
 # --- DEPENDENCIES ---
