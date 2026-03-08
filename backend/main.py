@@ -108,13 +108,28 @@ def start_round(req: StartRoundRequest, uid: str = Depends(verify_token)):
 def evaluate_prompt(req: EvaluateRequest):
     url = "https://rounakjain01-kaggle-koders-ai.hf.space/calculate"
     payload = {"prompt": req.prompt, "target": TARGET_PROMPTS.get(req.pairId, "")}
+    
     try:
-        # Optimized: Use session instead of requests.post
-        res = session.post(url, json=payload, timeout=10)
-        return {"success": True, **res.json()} if res.status_code == 200 else {"success": False, "score": 0}
-    except:
-        return {"success": False, "score": 0}
-
+        # Timeout 45 seconds kiya hai taaki agar HF model sleep par ho, toh usko jaagne ka time mile
+        res = session.post(url, json=payload, timeout=45)
+        
+        if res.status_code == 200:
+            data = res.json()
+            # Dhyan rahe ki frontend ko feedback array aur score proper format mein mile
+            return {
+                "success": True, 
+                "score": data.get("score", 0), 
+                "feedback": data.get("feedback", [])
+            }
+        else:
+            # Agar Hugging Face ne 500, 503 ya 404 error diya toh terminal mein print hoga
+            print(f"HF Error Status: {res.status_code}, Response: {res.text}")
+            return {"success": False, "score": 0, "message": f"AI Engine Error ({res.status_code}). Server might be asleep."}
+            
+    except Exception as e:
+        # Asli bimari yahan print hogi (e.g., requests.exceptions.Timeout)
+        print(f"Evaluate Endpoint Failed: {str(e)}")
+        return {"success": False, "score": 0, "message": "AI is waking up or overloaded. Please try again in 30 seconds."}
 @app.post("/api/submit-round")
 def submit_round1(req: RoundSubmissionRequest, uid: str = Depends(verify_token)):
     try:

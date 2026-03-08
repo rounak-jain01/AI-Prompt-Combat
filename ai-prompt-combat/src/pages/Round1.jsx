@@ -133,6 +133,7 @@ export default function Round1() {
   }, [timeLeft, checkingAccess, accessDenied]);
 
   // --- CHECK PROMPT ---
+  // --- CHECK PROMPT ---
   const handleCheckPrompt = useCallback(async () => {
     if (!currentPrompt.trim()) return toast.error("Prompt cannot be empty!");
     if (currentStatus.attemptsLeft <= 0) return toast.error("Attempts exhausted! Please lock answer.");
@@ -148,6 +149,8 @@ export default function Round1() {
       });
 
       const data = await response.json();
+      
+      // ✅ SUCCESS CASE: Prompt is good
       if (data.success) {
         setPairStatus((prev) => {
           const newStatus = [...prev];
@@ -167,6 +170,24 @@ export default function Round1() {
         });
         toast.success(`Score: ${data.score}%`, { id: toastId });
         setPreviewOpen(true);
+      } 
+      // 🚨 ERROR CASE: Backend returns success: false (e.g. "fff")
+      else {
+        // Remove the loading toast and show error
+        toast.error(data.message || "Invalid or off-topic prompt! Score: 0", { id: toastId });
+        
+        // Penalize the user by reducing 1 attempt and setting score to 0
+        setPairStatus((prev) => {
+          const newStatus = [...prev];
+          const current = { ...newStatus[currentIndex] };
+
+          current.attemptsLeft -= 1; // Attempt waste ho gaya
+          current.lastScore = 0;
+          current.feedback = ["The AI could not process this prompt. Please write a descriptive prompt."];
+
+          newStatus[currentIndex] = current;
+          return newStatus;
+        });
       }
     } catch (error) {
       toast.error("Backend Error", { id: toastId });
