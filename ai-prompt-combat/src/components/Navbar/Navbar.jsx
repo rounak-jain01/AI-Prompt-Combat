@@ -24,15 +24,15 @@ const Navbar = () => {
   }, []);
 
   // Logout Function
-  // const handleLogout = async () => {
-  //   try {
-  //     await signOut(auth);
-  //     navigate('/'); 
-  //     setIsOpen(false); 
-  //   } catch (error) {
-  //     console.error("Error signing out: ", error);
-  //   }
-  // };
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/'); 
+      setIsOpen(false); 
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   // Base Navigation Links
   const navLinks = [
@@ -138,7 +138,6 @@ const Navbar = () => {
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-3xl pt-28 px-8 lg:hidden flex flex-col items-center animate-in fade-in slide-in-from-top-10 duration-300">
             
-            {/* Mobile Links */}
             <div className="flex flex-col items-center gap-8 mb-10 w-full">
               {navLinks.map((link) => (
                 <a 
@@ -151,7 +150,6 @@ const Navbar = () => {
                 </a>
               ))}
               
-              {/* ✅ MOBILE LEADERBOARD LINK */}
               {currentUser && (
                   <Link 
                     to="/leaderboard"
@@ -163,8 +161,7 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Action Buttons */}
-            <div className="w-full max-w-xs flex flex-col gap-4">
+            {/* <div className="w-full max-w-xs flex flex-col gap-4">
               {currentUser ? (
                 <>
                     <Link to="/lobby" onClick={() => setIsOpen(false)}>
@@ -173,7 +170,6 @@ const Navbar = () => {
                         </button>
                     </Link>
                     
-                    {/* ✅ MOBILE LOGOUT BUTTON */}
                     <button 
                         onClick={handleLogout}
                         className="w-full py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 font-bold text-lg flex items-center justify-center gap-2 transition-all"
@@ -195,7 +191,7 @@ const Navbar = () => {
                     </Link>
                 </>
               )}
-            </div>
+            </div> */}
         </div>
       )}
     </>
