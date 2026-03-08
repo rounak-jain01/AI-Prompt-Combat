@@ -24,15 +24,15 @@ const Navbar = () => {
   }, []);
 
   // Logout Function
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/'); 
-      setIsOpen(false); 
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await signOut(auth);
+  //     navigate('/'); 
+  //     setIsOpen(false); 
+  //   } catch (error) {
+  //     console.error("Error signing out: ", error);
+  //   }
+  // };
 
   // Base Navigation Links
   const navLinks = [
@@ -81,28 +81,26 @@ const Navbar = () => {
               ))}
 
               {/* ✅ LEADERBOARD LINK (Only if Logged In) */}
-              {currentUser && (
+              {/* {currentUser && (
                 <Link 
                     to="/leaderboard" // Make sure this route exists in App.js
                     className="flex items-center gap-2 text-sm font-medium text-[#D4AF37] hover:text-white transition-colors relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-white after:transition-all hover:after:w-full"
                 >
                     <Trophy size={16} /> Leaderboard
                 </Link>
-              )}
+              )} */}
             </div>
 
             {/* === ACTION BUTTONS (Desktop) === */}
-            <div className="hidden lg:block">
+            {/* <div className="hidden lg:block">
               {currentUser ? (
                 <div className="flex items-center gap-4">
-                    {/* Dashboard Button */}
                     <Link to="/lobby">
                         <button className="cursor-pointer px-6 py-2.5 rounded-xl bg-primary text-black font-bold text-sm hover:bg-black hover:text-primary border-2 border-primary hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
                             Dashboard <LayoutDashboard size={16} />
                         </button>
                     </Link>
                     
-                    {/* ✅ LOGOUT BUTTON */}
                     <button 
                         onClick={handleLogout}
                         className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:border-red-500/50 hover:bg-red-500/10 transition-all cursor-pointer"
@@ -123,7 +121,7 @@ const Navbar = () => {
                     </Link>
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* === MOBILE MENU TOGGLE === */}
             <button 

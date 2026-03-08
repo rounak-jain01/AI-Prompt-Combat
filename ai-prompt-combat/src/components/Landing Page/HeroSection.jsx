@@ -1,18 +1,105 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, Trophy, Users, ArrowRight, LayoutDashboard } from "lucide-react"; // Icon added
+import { Zap, Trophy, Users, ArrowRight, LayoutDashboard, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"; // Context Import
+import { useAuth } from "../../context/AuthContext";
 
 import bannerImage from "../../assets/banner.jpg";
 import logo from "../../assets/Kagglelogo.png";
 import kalasarthiBadge from "../../assets/kalasarthiBadge.jpg";
 
-const HeroSection = () => {
-  const { currentUser } = useAuth(); // Get User Status
+const getEventDate = () => {
+  const now = new Date();
+  let year = now.getFullYear();
+  const event = new Date(year, 3, 2, 11, 0, 0);
+  if (now > event) year += 1;
+  return new Date(year, 3, 2, 11, 0, 0);
+};
+
+const EVENT_DATE = getEventDate();
+
+const Countdown = () => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date().getTime();
+      const end = EVENT_DATE.getTime();
+      const diff = end - now;
+      if (diff <= 0) {
+        setExpired(true);
+        return;
+      }
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (expired) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary/20 border border-primary/50 text-primary font-bold text-lg mb-8"
+      >
+        <Clock size={22} />
+        Event is live!
+      </motion.div>
+    );
+  }
+
+  const units = [
+    { value: timeLeft.days, label: "Days" },
+    { value: timeLeft.hours, label: "Hours" },
+    { value: timeLeft.minutes, label: "Mins" },
+    { value: timeLeft.seconds, label: "Secs" },
+  ];
 
   return (
-    <section className="mt-5 relative h-screen min-h-150 flex items-center justify-center overflow-hidden bg-dark pt-16">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25 }}
+      className="mb-8"
+    >
+      <div className="inline-flex flex-col items-center gap-3 px-6 py-5 sm:px-8 sm:py-6 rounded-2xl border-2 border-primary/60 bg-primary/10 shadow-[0_0_40px_-8px_rgba(212,175,55,0.4),inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
+        <div className="flex items-center gap-2 text-white font-bold uppercase tracking-[0.2em] text-xs sm:text-sm">
+          <Clock size={16} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+          Event starts in
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+          {units.map(({ value, label }) => (
+            <div
+              key={label}
+              className="min-w-[70px] sm:min-w-[80px] px-4 py-3 sm:px-5 sm:py-4 rounded-xl bg-black/40 border border-primary/30 text-center shadow-[0_0_20px_-4px_rgba(212,175,55,0.25)]"
+            >
+              <div className="text-3xl sm:text-4xl font-bold text-white tabular-nums font-display drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+                {String(value).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] sm:text-xs text-white/90 uppercase tracking-wider mt-1 font-medium">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const HeroSection = () => {
+  const { currentUser } = useAuth();
+
+  return (
+    <section className="mt-5 relative min-h-screen flex items-center justify-center overflow-x-hidden bg-dark pt-16 pb-12">
       
 
       {/* 1. BACKGROUND BANNER ANIMATION */}
@@ -113,19 +200,22 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="text-base md:text-xl text-gray-300 mb-8 max-w-xl mx-auto font-medium tracking-wide"
+            className="text-base md:text-xl text-gray-300 mb-6 max-w-xl mx-auto font-medium tracking-wide"
           >
             Where Creativity Meets <span className="text-primary font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]">Precision</span>
           </motion.p>
 
-          {/* BUTTONS (UPDATED LOGIC) */}
+          {/* COUNTDOWN TO EVENT */}
+          <Countdown />
+
+          {/* BUTTONS */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-10 px-6"
           >
-            {currentUser ? (
+            {/* {currentUser ? (
                 // IF LOGGED IN: Go to Dashboard
                 <Link to="/lobby" className="px-6 py-3 bg-primary text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-primary hover:border-primary hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                     <LayoutDashboard size={18} /> Go to Dashboard
@@ -135,7 +225,7 @@ const HeroSection = () => {
                 <Link to="/register" className="px-6 py-3 bg-primary text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-primary hover:border-primary hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                     <Trophy size={18} /> Register Now
                 </Link>
-            )}
+            )} */}
 
             <a href="#format" className="px-6 py-3 border border-primary/50 text-primary font-bold text-base rounded-full hover:bg-black hover:text-primary hover:border-primary hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2">
                View Rules <ArrowRight size={18} />
