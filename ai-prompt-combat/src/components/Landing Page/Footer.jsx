@@ -156,25 +156,28 @@ const Footer = () => {
               />
             </a>
 
-            {/* Social Icons */}
-            <h4 className="text-white font-bold text-sm mb-4">
-              Follow Updates
-            </h4>
-            <div className="flex gap-3">
-              {socialLinks.map((social, index) => (
-<a 
-                  key={index} 
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:-translate-y-1 hover:shadow-[0_5px_15px_-5px_rgba(0,0,0,0.5)] transition-all duration-300 group"
-                >
-                  <social.icon
-                    size={18}
-                    className="group-hover:scale-110 transition-transform duration-300"
-                  />
-                </a>
-              ))}
+            {/* Social - same card style as email */}
+            <div className="group p-4 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-300">
+              <span className="block text-xs text-gray-400 uppercase tracking-wider group-hover:text-primary mb-3">
+                Follow us
+              </span>
+              <div className="flex gap-3">
+                {socialLinks.map((social, index) => (
+                  <a
+                    key={index}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ "--hover-color": social.color }}
+                    className="footer-social-link w-11 h-11 rounded-lg bg-black/30 border border-white/10 flex items-center justify-center text-gray-400 hover:-translate-y-0.5 hover:border-white/20 transition-all duration-300"
+                  >
+                    <social.icon
+                      size={20}
+                      className="group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
