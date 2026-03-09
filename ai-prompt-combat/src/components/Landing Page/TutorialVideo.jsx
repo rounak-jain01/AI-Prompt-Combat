@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Film, Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 
-// YouTube video: https://youtu.be/lvHu5CPpnqc
 const YOUTUBE_VIDEO_ID = "lvHu5CPpnqc";
 
 const formatTime = (s) => {
@@ -14,31 +13,27 @@ const formatTime = (s) => {
 
 const loadYouTubeAPI = () =>
   new Promise((resolve) => {
-    if (window.YT?.Player) {
-      resolve();
-      return;
-    }
+    if (window.YT?.Player) return resolve();
+
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
-    const firstScript = document.getElementsByTagName("script")[0];
-    firstScript.parentNode.insertBefore(tag, firstScript);
-    window.onYouTubeIframeAPIReady = () => resolve();
+    document.body.appendChild(tag);
+
+    window.onYouTubeIframeAPIReady = resolve;
   });
 
 const TutorialVideo = () => {
-  const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const progressRef = useRef(null);
+
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [muted, setMuted] = useState(true);
-  const [progressDrag, setProgressDrag] = useState(false);
 
   useEffect(() => {
-    if (!playerContainerRef.current || !YOUTUBE_VIDEO_ID) return;
     loadYouTubeAPI().then(() => {
-      playerRef.current = new window.YT.Player("yt-tutorial-player", {
+      playerRef.current = new window.YT.Player("yt-player", {
         videoId: YOUTUBE_VIDEO_ID,
         playerVars: {
           autoplay: 1,
@@ -47,58 +42,57 @@ const TutorialVideo = () => {
           rel: 0,
           modestbranding: 1,
           playsinline: 1,
+          loop: 1,
+          playlist: YOUTUBE_VIDEO_ID,
         },
         events: {
-          onReady(e) {
-            setReady(true);
-            setDuration(e.target.getDuration());
-            e.target.mute();
-            e.target.playVideo();
-            setPlaying(true);
-            setMuted(true);
+          onReady: (e) => {
+            const p = e.target;
+            p.mute();
+            p.playVideo();
+
+            setDuration(p.getDuration());
+          },
+
+          onStateChange: (e) => {
+            if (e.data === window.YT.PlayerState.PLAYING) setPlaying(true);
+            if (e.data === window.YT.PlayerState.PAUSED) setPlaying(false);
+
+            if (e.data === window.YT.PlayerState.ENDED) {
+              e.target.seekTo(0);
+              e.target.playVideo();
+            }
           },
         },
       });
     });
 
-    return () => {
-      if (playerRef.current?.destroy) playerRef.current.destroy();
-    };
+    return () => playerRef.current?.destroy();
   }, []);
 
   useEffect(() => {
-    if (!ready || !playerRef.current?.getCurrentTime || progressDrag) return;
-    const poll = () => {
+    const interval = setInterval(() => {
       const p = playerRef.current;
       if (!p?.getCurrentTime) return;
-      const t = p.getCurrentTime();
-      if (Number.isFinite(t)) setCurrentTime(t);
-      if (p.getDuration && Number.isFinite(p.getDuration())) setDuration(p.getDuration());
-      if (window.YT?.PlayerState?.ENDED !== undefined && p.getPlayerState() === window.YT.PlayerState.ENDED) {
-        setPlaying(false);
-      }
-    };
-    poll();
-    const intervalId = setInterval(poll, 250);
-    return () => clearInterval(intervalId);
-  }, [ready, progressDrag]);
+
+      setCurrentTime(p.getCurrentTime());
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const togglePlay = () => {
     const p = playerRef.current;
-    if (!p?.getPlayerState) return;
-    const state = p.getPlayerState();
-    if (state === window.YT.PlayerState.PLAYING) {
-      p.pauseVideo();
-      setPlaying(false);
-    } else {
-      p.playVideo();
-      setPlaying(true);
-    }
+    if (!p) return;
+
+    if (playing) p.pauseVideo();
+    else p.playVideo();
   };
 
   const toggleMute = () => {
     const p = playerRef.current;
-    if (!p?.mute) return;
+    if (!p) return;
+
     if (muted) {
       p.unMute();
       setMuted(false);
@@ -108,154 +102,86 @@ const TutorialVideo = () => {
     }
   };
 
-  const handleProgressClick = (e) => {
+  const seekVideo = (e) => {
     const p = playerRef.current;
-    if (!p?.seekTo || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const t = Math.max(0, Math.min(duration, x * duration));
-    p.seekTo(t, true);
-    setCurrentTime(t);
+    if (!p) return;
+
+    const rect = progressRef.current.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const time = percent * duration;
+
+    p.seekTo(time, true);
+    setCurrentTime(time);
   };
 
-  const handleProgressMouseDown = () => setProgressDrag(true);
-  useEffect(() => {
-    if (!progressDrag) return;
-    const onMouseUp = () => setProgressDrag(false);
-    const onMove = (e) => {
-      const p = playerRef.current;
-      const bar = document.querySelector(".tutorial-video-wrapper .progress-bar");
-      if (!p?.seekTo || !duration || !bar) return;
-      const rect = bar.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const t = x * duration;
-      p.seekTo(t, true);
-      setCurrentTime(t);
-    };
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mousemove", onMove);
-    return () => {
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMove);
-    };
-  }, [progressDrag, duration]);
-
   const toggleFullscreen = () => {
-    const wrapper = document.querySelector(".tutorial-video-wrapper");
-    if (!wrapper) return;
-    if (!document.fullscreenElement) wrapper.requestFullscreen?.();
+    const el = document.querySelector(".video-wrapper");
+
+    if (!document.fullscreenElement) el.requestFullscreen?.();
     else document.exitFullscreen?.();
   };
 
   return (
-    <section id="tutorial" className="relative py-24 bg-dark overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary rounded-full blur-[200px] opacity-5 pointer-events-none" />
+    <section className="py-24 bg-dark">
+      <div className="container mx-auto px-6">
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex items-center justify-center gap-2 mb-4"
-          >
+        <div className="text-center mb-12">
+          <div className="flex justify-center gap-2 mb-4">
             <Film size={18} className="text-primary" />
-            <span className="text-primary font-bold tracking-[0.2em] uppercase text-sm">
+            <span className="text-primary font-bold uppercase text-sm">
               Watch & Learn
             </span>
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-display font-bold text-white mb-4"
-          >
+          </div>
+
+          <h2 className="text-4xl font-bold text-white">
             How the <span className="text-primary">Competition</span> Works
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-gray-400 text-base md:text-lg"
-          >
-            Watch this short tutorial to understand the event flow, rounds, and how to participate from start to finish.
-          </motion.p>
+          </h2>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="max-w-4xl mx-auto"
-        >
-          <div className="tutorial-video-wrapper video-wrapper relative rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-[0_0_60px_-15px_rgba(212,175,55,0.15)]">
-            <div className="aspect-video w-full relative bg-black">
+        <div className="max-w-4xl mx-auto">
+
+          <div className="video-wrapper relative rounded-xl overflow-hidden border border-white/10">
+
+            <div className="aspect-video bg-black">
+              <div id="yt-player" className="w-full h-full" />
+            </div>
+
+            {/* Controls */}
+            <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3 bg-black/80">
+
+              <button onClick={togglePlay} className="text-primary">
+                {playing ? <Pause size={20}/> : <Play size={20}/>}
+              </button>
+
               <div
-                ref={playerContainerRef}
-                id="yt-tutorial-player"
-                className="absolute inset-0 w-full h-full [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full"
-              />
-              <div
-                className="absolute inset-0 cursor-pointer"
-                onClick={togglePlay}
-                onKeyDown={(e) => e.key === " " && togglePlay()}
-                role="button"
-                tabIndex={0}
-                aria-label="Play or pause"
-              />
-              {/* Custom controls bar - theme matched */}
-              <div
-                className="absolute bottom-0 left-0 right-0 flex items-center gap-2 px-3 py-2 bg-gradient-to-t from-black/95 to-black/70 border-t border-primary/20"
-                onClick={(e) => e.stopPropagation()}
+                ref={progressRef}
+                onClick={seekVideo}
+                className="flex-1 h-1 bg-white/20 rounded cursor-pointer"
               >
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  className="p-1.5 rounded-lg text-primary hover:bg-primary/20 transition-colors"
-                  aria-label={playing ? "Pause" : "Play"}
-                >
-                  {playing ? <Pause size={20} /> : <Play size={20} />}
-                </button>
                 <div
-                  className="progress-bar flex-1 h-1.5 rounded-full bg-white/20 cursor-pointer overflow-hidden min-w-0"
-                  onClick={handleProgressClick}
-                  onMouseDown={handleProgressMouseDown}
-                  role="progressbar"
-                  aria-valuenow={duration ? (currentTime / duration) * 100 : 0}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-150"
-                    style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
-                  />
-                </div>
-                <span className="text-xs text-gray-400 tabular-nums shrink-0">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                <button
-                  type="button"
-                  onClick={toggleMute}
-                  className="p-1.5 rounded-lg text-primary hover:bg-primary/20 transition-colors"
-                  aria-label={muted ? "Unmute" : "Mute"}
-                >
-                  {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  className="p-1.5 rounded-lg text-primary hover:bg-primary/20 transition-colors"
-                  aria-label="Fullscreen"
-                >
-                  <Maximize size={18} />
-                </button>
+                  className="h-full bg-primary"
+                  style={{
+                    width: `${duration ? (currentTime / duration) * 100 : 0}%`
+                  }}
+                />
               </div>
+
+              <span className="text-xs text-gray-400">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+
+              <button onClick={toggleMute} className="text-primary">
+                {muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
+              </button>
+
+              <button onClick={toggleFullscreen} className="text-primary">
+                <Maximize size={18}/>
+              </button>
+
             </div>
           </div>
-        </motion.div>
+
+        </div>
       </div>
     </section>
   );
