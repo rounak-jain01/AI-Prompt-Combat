@@ -42,3 +42,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #F4CF57;
 }
+
+/* Footer social links: brand color on hover */
+.footer-social-link:hover {
+  color: var(--hover-color) !important;
+}
