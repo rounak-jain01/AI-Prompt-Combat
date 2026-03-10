@@ -40,10 +40,21 @@ const About = () => {
           className="max-w-4xl mx-auto mb-16"
         >
           <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
-            The objective of this event is to test and enhance students' technical capabilities in the rapidly evolving field of <span className="text-primary font-semibold">Generative Artificial Intelligence</span>. Unlike traditional coding hackathons, this competition evaluates <span className="text-white font-medium">"Prompt Engineering"</span>—the skill of effectively communicating with AI models to produce highly accurate visual and motion graphics.
+            In our daily lives, we interact with AI models more often than we realize whether it's <span className="text-white font-medium">generating images, writing content, or asking for creative ideas.</span> But did you know that writing the <span className="text-primary font-semibold"> right prompt is actually a skill?</span>
+          </p>
+
+          <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
+            This event is designed to test and improve student's <span className="text-white font-medium">Prompt Engineering skills </span> the ability to give clear and effective instructions to AI models to generate accurate visuals and motion graphics.
+          </p>
+          <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
+            Unlike traditional coding Competition, this competition focuses on creativity, clarity, and smart prompting rather than programming.
+          </p>
+
+          <p className="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
+            To ensure a smooth and transparent experience, the entire event will be conducted on a <span className="text-white font-medium">custom-built web portal </span> featuring real-time updates, live leaderboards, and automated access control.
           </p>
           <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-            To ensure absolute transparency and a state-of-the-art experience, the entire event will be hosted on a custom-built proprietary Web Portal featuring real-time synchronization, live leaderboards, and automated access control.
+            If you're <span className="text-primary font-semibold">curious about AI </span> and want to see <span className="text-primary font-semibold">how powerful your prompts </span> can be, this event is the perfect opportunity to experiment, compete, and showcase your skills!
           </p>
         </motion.div>
 
