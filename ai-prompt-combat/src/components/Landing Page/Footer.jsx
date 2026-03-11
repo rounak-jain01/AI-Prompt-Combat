@@ -217,7 +217,7 @@ const Footer = () => {
               {" "}
               ×
               {" "}
-              <a href="https://rounakjainportfolio.vercel.app/" target="_blank" className="text-sm text-white hover:text-primary transition-colors">
+              <a href="https://vipin2507.github.io/Vipin-Portfolio/" target="_blank" className="text-sm text-white hover:text-primary transition-colors">
                 Vipin Tomar
               </a>
             </span>
