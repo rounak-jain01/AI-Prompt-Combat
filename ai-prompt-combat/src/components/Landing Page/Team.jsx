@@ -154,7 +154,7 @@ const teamMembers2 = [
     image: "/team/Kalasarthi/Arjit_tripathi.png",
   },
   {
-    name: "Hiba Hasan",
+    name: "Hifza Hasan",
     role: "Member",
     image: "/team/Kalasarthi/Hifza_hasan.png",
   },
