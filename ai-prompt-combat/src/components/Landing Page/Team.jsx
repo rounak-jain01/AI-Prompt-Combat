@@ -76,12 +76,12 @@ const teamMembers1 = [
     image: "/team/Kaggle Koders/Rishabh_Vishwakarma.png",
   },
   {
-    name: "Rahma Aziz",
+    name: "Rohma Aziz",
     role: "Member",
     image: "/team/Kaggle Koders/Rohma_aziz.png",
   },
   {
-    name: "Tanisha Namdev",
+    name: "Tanisha Narnaware",
     role: "Member",
     image: "/team/Kaggle Koders/Tanisha_Narnaware.png",
   },
