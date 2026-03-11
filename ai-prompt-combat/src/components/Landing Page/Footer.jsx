@@ -189,27 +189,38 @@ const Footer = () => {
           </p>
 
           <div className="flex items-center gap-6">
-            <a
+            <p
               href="#"
               className="text-sm text-gray-500 hover:text-primary transition-colors"
             >
               Privacy Policy
-            </a>
-            <a
+            </p>
+            <p
               href="#"
               className="text-sm text-gray-500 hover:text-primary transition-colors"
             >
               Terms of Service
-            </a>
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-gray-600 md:flex">
-            <span>Made with</span>
+            <span>Developed with</span>
             <Heart
               size={10}
               className="text-red-500 fill-red-500 animate-pulse"
             />
-            <span>by Tech Team</span>
+            <span>
+              by{" "}
+              <a href="https://rounakjainportfolio.vercel.app/" target="_blank" className="text-sm text-white hover:text-primary transition-colors">
+                Rounak Jain
+              </a>
+              {" "}
+              ×
+              {" "}
+              <a href="https://rounakjainportfolio.vercel.app/" target="_blank" className="text-sm text-white hover:text-primary transition-colors">
+                Vipin Tomar
+              </a>
+            </span>
           </div>
         </div>
       </div>
