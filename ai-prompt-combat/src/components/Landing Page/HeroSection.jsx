@@ -215,7 +215,7 @@ const HeroSection = () => {
             transition={{ delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-10 px-6"
           >
-            /* {currentUser ? (
+            {/* {currentUser ? (
                 // IF LOGGED IN: Go to Dashboard
                 <Link to="/lobby" className="px-6 py-3 bg-primary text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-primary hover:border-primary hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                     <LayoutDashboard size={18} /> Go to Dashboard
@@ -225,7 +225,7 @@ const HeroSection = () => {
                 <Link to="/register" className="px-6 py-3 bg-primary text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-primary hover:border-primary hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
                     <Trophy size={18} /> Register Now
                 </Link>
-            )} */
+            )} */}
 
             <a href="#format" className="px-6 py-3 border border-primary/50 text-primary font-bold text-base rounded-full hover:bg-black hover:text-primary hover:border-primary hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2">
                View Rules <ArrowRight size={18} />
