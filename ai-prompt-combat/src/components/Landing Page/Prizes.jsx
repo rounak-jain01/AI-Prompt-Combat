@@ -23,7 +23,7 @@ const Prizes = () => {
         </div>
 
         {/* CARDS CONTAINER */}
-        <div className="flex flex-col md:flex-row justify-center items-stretch gap-6 max-w-4xl mx-auto mb-16">
+        <div className="flex flex-col md:flex-row justify-center items-end gap-6 max-w-4xl mx-auto mb-16">
           {/* 1ST PLACE (Gold) - crown absolutely positioned above card */}
           <div className="order-1 md:order-1 w-full md:w-1/2 flex relative">
             <motion.div
@@ -37,9 +37,9 @@ const Prizes = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="group w-full flex flex-1"
+              className="group w-full"
             >
-              <div className="relative bg-[#0A0A0A] rounded-3xl border-2 border-[#FFD700] p-8 flex flex-col items-center text-center h-full w-full shadow-[0_0_30px_-10px_rgba(255,215,0,0.3)] transition-all duration-300 ease-out group-hover:-translate-y-3 group-hover:shadow-[0_24px_60px_-20px_rgba(255,215,0,0.8)] group-hover:border-[#FFE066]">
+              <div className="relative bg-[#0A0A0A] rounded-3xl border-2 border-[#FFD700] p-8 flex flex-col items-center text-center w-full shadow-[0_0_30px_-10px_rgba(255,215,0,0.3)] transition-all duration-300 ease-out group-hover:-translate-y-3 group-hover:shadow-[0_24px_60px_-20px_rgba(255,215,0,0.8)] group-hover:border-[#FFE066]">
                 <div className="w-20 h-20 rounded-full bg-linear-to-b from-[#FFD700] to-[#B8860B] flex items-center justify-center mb-4 shadow-lg shadow-[#FFD700]/20 transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:scale-105">
                   <Trophy size={40} className="text-black fill-current" />
                 </div>
@@ -62,13 +62,13 @@ const Prizes = () => {
             transition={{ delay: 0.1 }}
             className="group order-2 w-full md:w-1/2 flex"
           >
-            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-8 flex flex-col items-center text-center h-full w-full transition-all duration-300 ease-out group-hover:-translate-y-2 group-hover:border-gray-500 group-hover:shadow-[0_18px_45px_-18px_rgba(0,0,0,0.8)]">
+            <div className="relative bg-[#111111] rounded-3xl border border-gray-800 p-7 flex flex-col items-center text-center w-full transition-all duration-300 ease-out group-hover:-translate-y-2 group-hover:border-gray-500 group-hover:shadow-[0_18px_45px_-18px_rgba(0,0,0,0.8)]">
               <div className="w-16 h-16 rounded-full bg-linear-to-b from-gray-300 to-gray-500 flex items-center justify-center mb-4 shadow-lg transition-transform duration-300 group-hover:-translate-y-1 group-hover:rotate-3">
                 <Trophy size={32} className="text-white fill-current" />
               </div>
               <h3 className="text-2xl font-bold text-white">2nd Place</h3>
-              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Runner Up</p>
-              <div className="text-4xl font-black text-gray-300 mb-8">₹4,000</div>
+              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-5">Runner Up</p>
+              <div className="text-4xl font-black text-gray-300 mb-7">₹4,000</div>
               <ul className="space-y-3 w-full text-left pl-4">
                 <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Trophy</li>
                 <li className="flex items-center gap-2 text-gray-400 text-sm"><Star size={14} /> Certificate (Hard Copy)</li>
