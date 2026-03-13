@@ -81,14 +81,14 @@ const Navbar = () => {
               ))}
 
               {/* ✅ LEADERBOARD LINK (Only if Logged In) */}
-              /* {currentUser && (
+              {/* {currentUser && (
                 <Link 
                     to="/leaderboard" // Make sure this route exists in App.js
                     className="flex items-center gap-2 text-sm font-medium text-[#D4AF37] hover:text-white transition-colors relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-white after:transition-all hover:after:w-full"
                 >
                     <Trophy size={16} /> Leaderboard
                 </Link>
-              )} */
+              )} */}
             </div>
 
             {/* === ACTION BUTTONS (Desktop) === */}
