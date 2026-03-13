@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS = {
   round2Open: false, 
   targetDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), 
   topNAllowedForRound2: 50,
-  stats: { participants: 0, prizePool: "₹50K", systemStatus: "Standby" },
+  stats: { participants: 0, prizePool: "₹10K", systemStatus: "Standby" },
   updates: []
 };
 
