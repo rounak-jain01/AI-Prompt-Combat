@@ -24,15 +24,15 @@ const Navbar = () => {
   }, []);
 
   // Logout Function
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/'); 
-      setIsOpen(false); 
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await signOut(auth);
+  //     navigate('/'); 
+  //     setIsOpen(false); 
+  //   } catch (error) {
+  //     console.error("Error signing out: ", error);
+  //   }
+  // };
 
   // Base Navigation Links
   const navLinks = [
