@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Film, Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 
-const YOUTUBE_VIDEO_ID = "lvHu5CPpnqc";
+const YOUTUBE_VIDEO_ID = "xbRqFofJKaM";
 
 const formatTime = (s) => {
   if (!Number.isFinite(s) || s < 0) return "0:00";
