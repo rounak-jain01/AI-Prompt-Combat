@@ -76,12 +76,12 @@ const teamMembers1 = [
     image: "/team/Kaggle Koders/Rishabh_Vishwakarma.png",
   },
   {
-    name: "Rohma Aziz",
+    name: "Rahma Aziz",
     role: "Member",
     image: "/team/Kaggle Koders/Rohma_aziz.png",
   },
   {
-    name: "Tanisha Narnaware",
+    name: "Tanisha Namdev",
     role: "Member",
     image: "/team/Kaggle Koders/Tanisha_Narnaware.png",
   },
@@ -154,7 +154,7 @@ const teamMembers2 = [
     image: "/team/Kalasarthi/Arjit_tripathi.png",
   },
   {
-    name: "Hifza Hasan",
+    name: "Hiba Hasan",
     role: "Member",
     image: "/team/Kalasarthi/Hifza_hasan.png",
   },
@@ -231,6 +231,7 @@ const Team = () => {
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-primary/20 to-transparent" />
       <div className="absolute bottom-0 right-0 w-125 h-125 bg-primary rounded-full blur-[180px] opacity-5 pointer-events-none" />
+      <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-primary rounded-full blur-[180px] opacity-[0.04] pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         {/* MAIN TITLE */}
@@ -250,65 +251,119 @@ const Team = () => {
           </p>
         </div>
 
-        {/* 1. CORE LEADERSHIP */}
-        <div className="mb-20">
-          <div className="flex items-center justify-center gap-2 mb-10">
-            <Crown size={18} className="text-primary" />
-            <h3 className="text-xl md:text-2xl font-bold text-white">
-              Leadership Team
-            </h3>
+        {/* KAGGLE KODERS */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-24"
+        >
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-24 -left-24 w-72 h-72 bg-primary rounded-full blur-[120px] opacity-[0.06]" />
+              <div className="absolute -bottom-28 -right-28 w-80 h-80 bg-primary rounded-full blur-[140px] opacity-[0.04]" />
+            </div>
+
+            <div className="relative p-6 md:p-10">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 text-primary font-bold tracking-[0.2em] uppercase text-xs md:text-sm transition-all duration-300 hover:border-primary/40 hover:bg-primary/10 hover:shadow-[0_0_40px_-18px_rgba(212,175,55,0.35)]">
+                    <Users size={14} className="text-primary" />
+                    Kaggle Koders
+                  </span>
+                  <span className="hidden md:inline text-xs text-gray-400 uppercase tracking-[0.25em]">
+                    Club Team
+                  </span>
+                </div>
+              </div>
+
+              {/* Leadership */}
+              <div className="mb-16">
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-10">
+                  <Crown size={18} className="text-primary" />
+                  <h3 className="text-xl md:text-2xl font-bold text-white">Leadership Team</h3>
+                </div>
+                <div className="flex flex-wrap justify-center md:justify-start gap-10 md:gap-14">
+                  {coreLeaders.map((member, idx) => (
+                    <MemberCard key={idx} member={member} isLeader={true} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Members */}
+              <div>
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-10">
+                  <Hash size={18} className="text-primary" />
+                  <h3 className="text-lg md:text-xl font-bold text-white">Members</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-10 justify-items-center md:justify-items-start">
+                  {teamMembers1.map((member, idx) => (
+                    <MemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-10 md:gap-16">
-            {coreLeaders.map((member, idx) => (
-              <MemberCard key={idx} member={member} isLeader={true} />
-            ))}
-          </div>
+        </motion.div>
+
+        {/* Divider */}
+        <div className="max-w-5xl mx-auto mb-24">
+          <div className="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent" />
         </div>
 
-        {/* 2. TEAM MEMBERS BATCH 1 */}
-        <div className="mb-20">
-          <div className="flex items-center justify-center gap-2 mb-10">
-            <Hash size={18} className="text-primary" />
-            <h3 className="text-lg md:text-xl font-bold text-white">
-              Team Members
-            </h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-10 justify-items-center">
-            {teamMembers1.map((member, idx) => (
-              <MemberCard key={idx} member={member} />
-            ))}
-          </div>
-        </div>
+        {/* KALASARTHI */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary rounded-full blur-[120px] opacity-[0.06]" />
+              <div className="absolute -bottom-28 -left-28 w-80 h-80 bg-primary rounded-full blur-[140px] opacity-[0.04]" />
+            </div>
 
-        {/* 3. DEPARTMENT LEADS */}
-        <div className="mb-20">
-          <div className="flex items-center justify-center gap-2 mb-10">
-            <Sparkles size={18} className="text-primary" />
-            <h3 className="text-xl md:text-2xl font-bold text-white">
-              Leadership Team
-            </h3>
-          </div>
-          <div className="flex flex-wrap justify-center gap-10 md:gap-16">
-            {deptLeads.map((member, idx) => (
-              <MemberCard key={idx} member={member} isLeader={true} />
-            ))}
-          </div>
-        </div>
+            <div className="relative p-6 md:p-10">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 text-primary font-bold tracking-[0.2em] uppercase text-xs md:text-sm transition-all duration-300 hover:border-primary/40 hover:bg-primary/10 hover:shadow-[0_0_40px_-18px_rgba(212,175,55,0.35)]">
+                    <Sparkles size={14} className="text-primary" />
+                    KalaSarthi
+                  </span>
+                  <span className="hidden md:inline text-xs text-gray-400 uppercase tracking-[0.25em]">
+                    Club Team
+                  </span>
+                </div>
+              </div>
 
-        {/* 4. TEAM MEMBERS BATCH 2 */}
-        <div>
-          <div className="flex items-center justify-center gap-2 mb-10">
-            <Hash size={18} className="text-primary" />
-            <h3 className="text-lg md:text-xl font-bold text-white">
-              Team Members
-            </h3>
+              {/* Leadership */}
+              <div className="mb-16">
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-10">
+                  <Crown size={18} className="text-primary" />
+                  <h3 className="text-xl md:text-2xl font-bold text-white">Leadership Team</h3>
+                </div>
+                <div className="flex flex-wrap justify-center md:justify-start gap-10 md:gap-14">
+                  {deptLeads.map((member, idx) => (
+                    <MemberCard key={idx} member={member} isLeader={true} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Members */}
+              <div>
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-10">
+                  <Hash size={18} className="text-primary" />
+                  <h3 className="text-lg md:text-xl font-bold text-white">Members</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center md:justify-items-start">
+                  {teamMembers2.map((member, idx) => (
+                    <MemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
-            {teamMembers2.map((member, idx) => (
-              <MemberCard key={idx} member={member} />
-            ))}
-          </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
