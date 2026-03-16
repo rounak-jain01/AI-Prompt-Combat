@@ -7,6 +7,9 @@ from pydantic import BaseModel
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from sentence_transformers import SentenceTransformer, util
+import random
+import base64
+from pathlib import Path
 
 # --- FIREBASE INIT ---
 if not firebase_admin._apps:
@@ -65,11 +68,18 @@ class AddUserModel(BaseModel):
 
 # --- CONSTANTS ---
 TARGET_PROMPTS = {
-    1: "Solarpunk architecture with vertical gardens, lush greenery covering concrete, cascading waterfalls, futuristic sustainable design, bright sunlight, utopian atmosphere, organic shapes, high detail.",
-    2: "Surreal portrait made of bioluminescent blue liquid water, fluid form with splashing effects, translucent texture, glowing particles, ethereal fantasy style, dark background, magical atmosphere.",
-    3: "Massive steampunk space station shaped like a gear orbiting a planet, industrial sci-fi architecture, metallic details, cosmic background with stars, cinematic scale, intricate machinery.",
-    4: "Liminal space horror playground, foggy and abandoned atmosphere, rusted metal, muted desaturated colors, eerie lighting, unsettling vibe, haunted aesthetic.",
-    5: "Intricate 3D paper quilling art of a lion, layered paper strips with depth, vibrant colors, handmade craft texture, papercraft style, abstract artistic representation."
+    1: "A dramatic studio photo of the widebody Lamborghini from [reference image 0], re-set against a solid black background. Low-key lighting highlights the grey paintwork and sharp creases, while the vibrant red wheels remain a bold, detailed focal point. Lowered stance, sharp focus.",
+    2: "Based on the architect's desk scene in image, the environment is transformed into a lush, bio-integrated sustainable workspace. The MacBook's screen now displays blueprints as green neon outlines. Small potted plants, abundant green moss, and creeping ivy overgrow the keyboard, desk, and blueprints. Miniature solar panel arrays are scattered throughout the moss and climbing the laptop. The hands, watch, and desk items are preserved but integrated with the plants and green tech. Dramatic lighting from the screen.",
+    3: "A vintage botanical illustration plate on aged, textured paper, based on the composition and subjects of image. The pink and yellow blanket flower on the left and the monarch butterfly on the right are rendered in a detailed, hand-colored cross-hatch style. They are positioned within a dense, intricate background of mechanical blueprints, architectural grid-lines, and detailed monochrome scientific sketches with numerous antique handwritten labels. A prominent nautical compass rose is in the upper right. The paper is dotted with sepia tea stains and crease marks, transforming the entire scene into a scientific diagram.",
+    4: "Based on the lush mossy forest scene in image, the environment is transformed into a misty, mystical realm. The original figure in the distance, now cloaked in a flowing blue-purple iridescent cape, is surrounded by swirling, ethereal wisps of light and low fog, replacing the clear view. Dramatic crepuscular sunbeams (god rays) pierce the canopy, partially obscuring the tall conifer trees. The atmosphere is shifted to a surreal, magical quality. Lowered perspective",
+    5: "Based on the PC interior in image, the scene is transformed into a nature reclaiming technology aesthetic. Intricate green moss and vibrant blue buds overgrow the motherboard and metal chassis. The original rainbow ribbon cables, black heatsink, and legible component labels like RESET SW are preserved. Soft, natural sunlight highlights the contrast between the organic growth and the electronic parts. High-detail macro focus",
+    
+    # 👇 Naye 5 prompts yahan add karne hain 👇
+    6: "A cyberpunk-themed transformation of image. The African woman's joyful pose and tools remain, but are now set against a rainy, neon-drenched futuristic city. Holographic wireframe circuits are projected onto the wooden desk and laptop, which displays a glowing data interface. As she works, intense blue and pink electrical sparks cascade around the motherboard. The lighting shifts to dramatic pink and blue neons, contrasting with the dark urban environment. High detail macro focus.",
+    7: "A synthwave transformation of the laptop scene in image. The blurred laptop and background are replaced with a vibrant retro-futuristic city, featuring neon pink and cyan skyscrapers and a glowing orange-to-purple spiral portal. The 2x2 Rubik's-style cube on the keyboard is now black with glowing lime-green faces and yellow grid-line patterns. Ethereal light from the screen illuminates the keys and cube. High-detail, sharp focus on the cube, 80s aesthetic",
+    8: "Based on image, this new image portrays the same black man in the identical grey hooded jacket and direct profile pose, but against a solid, textured black studio background. The overall lighting has been significantly darkened to a moody, dramatic, low-key style. Soft, directed rim lighting from the left and front precisely defines his facial features, the texture of his jacket, and the small logo, while the rest of his form fades into deep shadow. The focus is sharp on his profile and determined gaze, enhancing the intimate and atmospheric feel.",
+    9: "A magical transformation of the landscape in image. The central tree is now a bioluminescent 'Tree of Life' with glowing cyan leaves, ancient twisting roots, and ethereal white spirits hanging from its branches. The background features a vibrant aurora borealis in green and purple, a crescent moon, and sparkling stardust. The calm water reflection is preserved but reflects the new mystical elements. The grassy hill is now covered in dark, purple-toned moss. High-detail, surreal fantasy style.",
+    10: "A mystical, surreal transformation of the sunset landscape in image. The silhouette of the bare tree and the orange-to-blue gradient sky are preserved, but the full moon is replaced by a glowing crescent moon and a vivid, shimmering green and purple aurora borealis. The foreground now features a still, dark lake that perfectly reflects the tree, the aurora, and the sky. Numerous small, glowing white ethereal spirits float among the tree branches and across the field. The starry night sky is dense with twinkling stars and a bright distant nebula. Cinematic, high-detail fantasy aesthetic."
 }
 
 # --- DEPENDENCIES ---
@@ -201,6 +211,44 @@ def get_status(uid: str = Depends(verify_token)):
         "round1_status": data.get("round1_status", "pending"),
         "round2_status": data.get("round2_status", "pending")
     }
+
+
+# --- SECURE IMAGE DELIVERY ROUTE ---
+@app.get("/api/round1/images")
+def get_randomized_images(uid: str = Depends(verify_token)):
+    all_available_cases = []
+    base_dir = Path("Round1Images") 
+    
+    # 1. Pehle saare 10 folders ko scan karke valid cases ki list banao
+    for i in range(1, 11): # 1 se 10 tak check karega
+        case_dir = base_dir / f"Case{i}"
+        input_path = case_dir / "input.jpg"
+        target_path = case_dir / "output.png"
+        
+        if input_path.exists() and target_path.exists():
+            with open(input_path, "rb") as f:
+                input_b64 = base64.b64encode(f.read()).decode('utf-8')
+            with open(target_path, "rb") as f:
+                target_b64 = base64.b64encode(f.read()).decode('utf-8')
+                
+            all_available_cases.append({
+                "id": i,
+                "input": f"data:image/jpeg;base64,{input_b64}",
+                "target": f"data:image/png;base64,{target_b64}"
+            })
+    
+    # 2. Check ki minimum 5 cases mil gaye hain
+    if len(all_available_cases) < 5:
+        return {"success": False, "message": f"Found only {len(all_available_cases)} cases. Need at least 5."}
+
+    # 3. 🛡️ RANDOMIZATION MAGIC: 
+    # 10 mein se koi bhi 5 random cases uthao (Har user ke liye alag selection)
+    selected_samples = random.sample(all_available_cases, 5)
+    
+    # 4. Un 5 selected cases ka order bhi shuffle kardo
+    random.shuffle(selected_samples)
+    
+    return {"success": True, "images": selected_samples}
 
 # --- ADMIN ROUTES ---
 
