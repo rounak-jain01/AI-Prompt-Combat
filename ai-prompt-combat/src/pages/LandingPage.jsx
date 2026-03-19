@@ -11,6 +11,7 @@ import EventDetails from "../components/Landing Page/EventDetails";
 import Organizers from "../components/Landing Page/Organizers";
 import Faculty from "../components/Landing Page/Faculty";
 import Team from "../components/Landing Page/Team";
+import SponsorsSection from "../components/Landing Page/SponsorsSection";
 import Footer from "../components/Landing Page/Footer";
 
 const LandingPage = () => {
@@ -61,6 +62,9 @@ const LandingPage = () => {
       </div>
       <div id="team">
         <Team />
+      </div>
+      <div id="sponsors">
+        <SponsorsSection />
       </div>
       <div id="contact">
         <Footer />
