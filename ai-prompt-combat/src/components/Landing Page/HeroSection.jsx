@@ -227,6 +227,10 @@ const HeroSection = () => {
                 </Link>
             )} */}
 
+            <a href="https://forms.gle/VrrV5esbxneoA1Ur5" target="_blank" className="px-6 py-3 bg-primary text-black font-bold text-base rounded-full shadow-[0_0_30px_rgba(212,175,55,0.3)] border border-transparent transition-all duration-300 hover:bg-black hover:text-primary hover:border-primary hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                    <Trophy size={18} /> Register Now
+                </a>
+
             <a href="#format" className="px-6 py-3 border border-primary/50 text-primary font-bold text-base rounded-full hover:bg-black hover:text-primary hover:border-primary hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2">
                View Rules <ArrowRight size={18} />
             </a>
