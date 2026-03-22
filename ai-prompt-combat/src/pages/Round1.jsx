@@ -154,7 +154,7 @@ export default function Round1() {
       const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: currentPrompt, pairId: pair.id }), // Backend will evaluate based on real pair ID
+        body: JSON.stringify({ prompt: currentPrompt, pairId: pair.id }), 
       });
 
       const data = await response.json();
@@ -251,7 +251,7 @@ export default function Round1() {
     toast.dismiss(); 
 
     const payload = pairStatus.map((p, idx) => ({
-      pairId: imagePairs[idx].id, // Send the ACTUAL pair ID, not the index
+      pairId: imagePairs[idx].id, 
       score: p.bestScore,
       prompt: p.bestPromptText || prompts[idx],
     }));
@@ -318,7 +318,7 @@ export default function Round1() {
     const tId = toast.loading("Securely Submitting...");
 
     const payload = pairStatus.map((p, idx) => ({
-      pairId: imagePairs[idx].id, // Send the ACTUAL pair ID
+      pairId: imagePairs[idx].id,
       score: p.isLocked ? p.finalSelectedScore : p.bestScore,
       prompt: p.isLocked ? p.finalSelectedPrompt : p.bestPromptText || prompts[idx],
     }));
@@ -367,8 +367,123 @@ export default function Round1() {
     <div className="min-h-screen bg-[#050505] text-white flex flex-col relative overflow-hidden selection:bg-[#D4AF37] selection:text-black">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: `linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)`, backgroundSize: "48px 48px" }} />
 
-      {/* MODALS */}
-      {/* ... (Your existing modal logic remains exactly same) ... */}
+      {/* === LOCK MODAL === */}
+      <AnimatePresence>
+        {showLockModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#111] border border-[#D4AF37] rounded-xl p-6 w-full max-w-lg relative shadow-[0_0_50px_rgba(212,175,55,0.15)]"
+            >
+              <button
+                onClick={() => setShowLockModal(false)}
+                className="absolute cursor-pointer top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <X />
+              </button>
+              <h3 className="text-xl font-bold text-[#D4AF37] mb-4 flex gap-2 items-center">
+                <Lock size={20} /> Select Answer to Lock
+              </h3>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => confirmLock("best")}
+                  className="cursor-pointer w-full text-left p-4 rounded-lg bg-gradient-to-r from-green-900/20 to-transparent border border-green-500/50 hover:border-green-400 transition-all group"
+                >
+                  <div className="flex justify-between items-center font-bold text-green-400 mb-1">
+                    <span className="flex items-center gap-2">
+                      <TrophyIcon size={16} /> Best Attempt
+                    </span>
+                    <span className="bg-green-500/20 px-2 py-0.5 rounded text-sm border border-green-500/50">
+                      {currentStatus.bestScore}%
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-xs italic line-clamp-2 border-t border-green-500/20 pt-2 mt-2 group-hover:text-green-200">
+                    {currentStatus.bestPromptText}
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => confirmLock("current")}
+                  className="cursor-pointer w-full text-left p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/30 transition-all group"
+                >
+                  <div className="flex justify-between items-center font-bold text-white mb-1">
+                    <span className="flex items-center gap-2">
+                      <Sparkles size={16} /> Current Editor Text
+                    </span>
+                    <span className="text-gray-500 text-xs border border-white/10 px-2 py-0.5 rounded">
+                      Unchecked
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-xs italic line-clamp-2 border-t border-white/10 pt-2 mt-2 group-hover:text-gray-300">
+                    {currentPrompt}
+                  </p>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* === SUBMIT CONFIRM MODAL === */}
+      <AnimatePresence>
+        {showSubmitModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className={`bg-[#0a0a0a] border rounded-xl p-8 w-full max-w-md relative shadow-2xl ${
+                submitModalContent.isWarning
+                  ? "border-red-500/50"
+                  : "border-[#D4AF37]/50"
+              }`}
+            >
+              <div
+                className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  submitModalContent.isWarning
+                    ? "bg-red-500/10 text-red-500"
+                    : "bg-[#D4AF37]/10 text-[#D4AF37]"
+                }`}
+              >
+                {submitModalContent.isWarning ? (
+                  <AlertTriangle size={32} />
+                ) : (
+                  <CheckCircle size={32} />
+                )}
+              </div>
+
+              <h3 className="text-2xl font-bold text-white text-center mb-2">
+                {submitModalContent.title}
+              </h3>
+              <p className="text-gray-400 text-center text-sm leading-relaxed mb-8">
+                {submitModalContent.message}
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSubmitModal(false)}
+                  className="cursor-pointer flex-1 py-3 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 font-bold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeSubmit}
+                  className={`cursor-pointer flex-1 py-3 rounded-lg font-bold text-black transition-all ${
+                    submitModalContent.isWarning
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-[#D4AF37] hover:bg-[#b8952b]"
+                  }`}
+                >
+                  Confirm Submit
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="sticky top-0 z-40 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 px-6 py-3 flex items-center justify-between shadow-lg">
         <div className="flex-1"><TopBar currentPairIndex={currentIndex} totalPairs={TOTAL_PAIRS} timeLeft={timeLeft} /></div>
@@ -406,3 +521,14 @@ export default function Round1() {
     </div>
   );
 }
+
+const TrophyIcon = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);

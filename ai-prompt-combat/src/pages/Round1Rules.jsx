@@ -233,7 +233,7 @@ export default function Round1Rules() {
                 <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center border border-red-500/20 mb-6 text-red-400">
                     <Clock size={24} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">25 Minute Limit</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">30 Minute Limit</h3>
                 <p className="text-gray-400 leading-relaxed">
                     The timer is strict. If time runs out, the system will <strong className="text-red-400">Auto-Submit</strong> your best-recorded attempts. Manage your time wisely across all 5 cases.
                 </p>
