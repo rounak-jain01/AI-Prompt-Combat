@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios"; 
 import { getAuth } from "firebase/auth";
-import { useNavigate } from "react-router-dom"; // ✅ For Redirect
+import { useNavigate } from "react-router-dom"; 
 import { 
   Clock, 
   UploadCloud, 
@@ -28,7 +28,8 @@ import toast from "react-hot-toast";
 import { API_BASE_URL } from "../config";
 
 // --- CONFIGURATION ---
-const TOTAL_TIME = 900; // 15 Minutes
+const TOTAL_TIME = 1800; // 15 Minutes
+// Dhyan rahe: Jab asli video lagayein toh server par CORS allow hona chahiye (Firebase Storage wagaira default allow karte hain)
 const REFERENCE_VIDEO_URL = "https://www.w3schools.com/html/mov_bbb.mp4"; 
 
 // 👇 CLOUDINARY CONFIG
@@ -36,43 +37,109 @@ const CLOUD_NAME = "drfjs718u";
 const UPLOAD_PRESET = "r5zxmuix"; 
 
 export default function Round2() {
-  const navigate = useNavigate(); // ✅ Navigation Hook
+  const navigate = useNavigate(); 
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [file, setFile] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [isPlaying, setIsPlaying] = useState(true);
   const [videoProgress, setVideoProgress] = useState(0);
   
+  // 🛡️ SECURE VIDEO STATE (GHOST URL)
+  const [secureVideoSrc, setSecureVideoSrc] = useState("");
+
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState("idle"); // idle, uploading, verifying, success, error
+  const [uploadStatus, setUploadStatus] = useState("idle"); 
   const [errorMessage, setErrorMessage] = useState("");
 
   const videoRef = useRef(null);
-  const timerRef = useRef(null); // ✅ Ref for Timer
+  const timerRef = useRef(null); 
 
-  // ✅ Defined isReady here
   const isReady = file && prompt.trim().length > 0;
 
-  // --- TIMER LOGIC (Auto-Stop on Upload) ---
+  // --- 🛡️ THE GHOST URL LOGIC (Anti-Download) ---
+  useEffect(() => {
+    const loadSecureVideo = async () => {
+      try {
+        // Video ko background mein download karke RAM mein rakhenge
+        const response = await fetch(REFERENCE_VIDEO_URL);
+        const blob = await response.blob();
+        // Nakli temporary link banayenge (HTML inspect karne par .mp4 nahi dikhega)
+        const blobUrl = URL.createObjectURL(blob);
+        setSecureVideoSrc(blobUrl);
+      } catch (error) {
+        console.error("Secure video load failed (CORS issue?). Falling back to normal URL.", error);
+        // Agar fetch fail ho jaye (CORS ki wajah se), toh normal link chala do
+        setSecureVideoSrc(REFERENCE_VIDEO_URL);
+      }
+    };
+    loadSecureVideo();
+
+    // Memory clean up
+    return () => {
+      if (secureVideoSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(secureVideoSrc);
+      }
+    };
+  }, []);
+
+  // --- 🛡️ GLOBAL ANTI-CHEAT SHIELD (Blocks Right-Click & F12) ---
+  useEffect(() => {
+    // 1. Pura Right Click Block
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      toast.error("Security Alert: Right-click is disabled in this arena.", { id: "sec-alert" });
+    };
+
+    // 2. Keyboard Shortcuts Block (F12, Ctrl+Shift+I, Ctrl+U)
+    const handleKeyDown = (e) => {
+      // F12 key
+      if (e.key === "F12") {
+        e.preventDefault();
+        toast.error("Security Alert: Developer tools are locked.", { id: "sec-alert" });
+      }
+      // Ctrl+Shift+I (Inspect) or Ctrl+Shift+J (Console) or Ctrl+Shift+C (Element Select)
+      if (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c")) {
+        e.preventDefault();
+        toast.error("Security Alert: Developer tools are locked.", { id: "sec-alert" });
+      }
+      // Ctrl+U (View Source) or Ctrl+S (Save Page)
+      if (e.ctrlKey && (e.key === "U" || e.key === "u" || e.key === "S" || e.key === "s")) {
+        e.preventDefault();
+        toast.error("Security Alert: Action blocked.", { id: "sec-alert" });
+      }
+    };
+
+    // Events ko document par laga do
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Clean up jab page band ho
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // --- TIMER LOGIC ---
   useEffect(() => {
     if (!isUploading && timeLeft > 0) {
         timerRef.current = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
-                    handleAutoSubmit(); // ⚡ Auto Submit on 00:00
+                    handleAutoSubmit(); 
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
     } else {
-        clearInterval(timerRef.current); // Pause timer during upload
+        clearInterval(timerRef.current); 
     }
     return () => clearInterval(timerRef.current);
-  }, [isUploading, timeLeft]); // Re-run when upload state changes
+  }, [isUploading, timeLeft]); 
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -87,7 +154,6 @@ export default function Round2() {
           handleSubmit();
       } else {
           toast.error("TIME UP! No artifact to submit.");
-          // Optional: Force redirect or disqualify
       }
   };
 
@@ -179,8 +245,6 @@ export default function Round2() {
     setUploadStatus("uploading");
     setUploadProgress(0);
     setErrorMessage("");
-    
-    // Timer automatically pauses due to useEffect dependency on isUploading
 
     try {
         const formData = new FormData();
@@ -188,13 +252,11 @@ export default function Round2() {
         formData.append("upload_preset", UPLOAD_PRESET); 
         formData.append("resource_type", "video"); 
 
-        // 1. Upload Video
         const uploadRes = await uploadToCloudinaryWithRetry(formData);
         const videoUrl = uploadRes.data.secure_url;
         
         setUploadStatus("verifying");
         
-        // 2. Save to Database
         const token = await user.getIdToken();
         const backendRes = await fetch(`${API_BASE_URL}/api/round2/submit`, {
             method: "POST",
@@ -210,10 +272,9 @@ export default function Round2() {
 
         if (backendRes.ok) {
             setUploadStatus("success");
-            // 3. Redirect after delay
             setTimeout(() => {
                 toast.success("ARTIFACT SECURED. REDIRECTING...");
-                navigate("/lobby"); // ✅ Redirect to Lobby
+                navigate("/lobby"); 
             }, 2000);
         } else {
             throw new Error("Server rejected submission");
@@ -238,6 +299,7 @@ export default function Round2() {
 
       {/* ================= STREAMLINED UPLOAD MODAL ================= */}
       {isUploading && (
+        // ... (Upload modal code remains exactly the same as your previous code) ...
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
               <div className="w-full max-w-lg bg-[#0A0A0A] border border-white/10 rounded-2xl p-0 shadow-[0_0_80px_rgba(0,0,0,0.9)] relative overflow-hidden flex flex-col">
                   
@@ -381,14 +443,19 @@ export default function Round2() {
             {/* Scanner Animation */}
             <div className="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(212,175,55,0.05)_50%,transparent_100%)] bg-[length:100%_200%] animate-[scan_4s_linear_infinite] pointer-events-none z-10"></div>
 
-            {/* Video Player */}
-            <div className="relative aspect-video bg-black flex items-center justify-center">
+            {/* 🛡️ SECURE VIDEO PLAYER */}
+            <div className="relative aspect-video bg-black flex items-center justify-center select-none"
+                 onContextMenu={(e) => e.preventDefault()} // Right-click ban
+                 onDragStart={(e) => e.preventDefault()} // Dragging ban
+            >
                <video 
                  ref={videoRef}
-                 src={REFERENCE_VIDEO_URL} 
+                 src={secureVideoSrc} 
                  autoPlay loop muted playsInline
                  onTimeUpdate={handleTimeUpdate}
-                 className="w-full h-full object-contain"
+                 controlsList="nodownload nofullscreen noremoteplayback" // Native buttons ban
+                 disablePictureInPicture // PiP ban
+                 className="w-full h-full object-contain pointer-events-none" // Direct clicks ban
                />
                
                {/* Floating Controls */}
@@ -404,7 +471,7 @@ export default function Round2() {
                </div>
 
                {/* Progress Line */}
-               <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 cursor-pointer" onClick={handleSeek}>
+               <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 cursor-pointer z-30" onClick={handleSeek}>
                   <div className="h-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]" style={{ width: `${videoProgress}%` }}></div>
                </div>
             </div>
@@ -433,7 +500,7 @@ export default function Round2() {
              <div className="mt-4 pt-4 border-t border-white/5 flex gap-2">
                  <AlertTriangle size={14} className="text-yellow-500" />
                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Ensure subject consistency throughout the clip. Glitches or warping will result in score deduction.
+                   Ensure subject consistency throughout the clip. Glitches or warping will result in score deduction.
                  </p>
              </div>
           </div>
@@ -457,7 +524,7 @@ export default function Round2() {
                    <p className="text-[10px] text-gray-500 font-mono mt-1">SECURE CONNECTION READY</p>
                  </div>
                  <div className="px-2 py-1 rounded border border-white/10 bg-white/5 text-[10px] font-mono text-gray-400">
-                    MP4 ONLY
+                   MP4 ONLY
                  </div>
               </div>
 
@@ -474,7 +541,6 @@ export default function Round2() {
                 <div className={`h-full border border-dashed rounded-xl flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden
                   ${file ? "border-[#D4AF37] bg-[#D4AF37]/5" : "border-white/10 hover:border-white/20 bg-black/40"}`}
                 >
-                   {/* Animated Grid Background for Dropzone */}
                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
 
                    {file ? (
@@ -486,7 +552,7 @@ export default function Round2() {
                        <p className="text-[#D4AF37] text-[10px] mt-1 font-mono tracking-widest uppercase">Ready for transmission</p>
                        
                        {!isUploading && (
-                           <button onClick={(e) => {e.stopPropagation(); setFile(null);}} className="mt-4 text-[10px] text-red-500 hover:text-white transition-colors border-b border-red-500/30 hover:border-white pb-0.5 z-30 relative">
+                           <button onClick={(e) => {e.stopPropagation(); setFile(null);}} className="mt-4 text-[10px] text-red-500 hover:text-white transition-colors border-b border-red-500/30 hover:border-white pb-0.5 z-30 relative cursor-pointer">
                              REMOVE ARTIFACT
                            </button>
                        )}
@@ -524,12 +590,12 @@ export default function Round2() {
                   disabled={!file || prompt.trim().length === 0 || isUploading}
                   className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden group
                     ${isReady && !isUploading
-                      ? "bg-[#D4AF37] text-black hover:bg-[#b8952b] shadow-[0_0_30px_rgba(212,175,55,0.2)]" 
+                      ? "bg-[#D4AF37] text-black hover:bg-[#b8952b] shadow-[0_0_30px_rgba(212,175,55,0.2)] cursor-pointer" 
                       : "bg-[#151515] text-gray-600 border border-white/5 cursor-not-allowed"}`}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                       {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-                      {isUploading ? "TRANSMITTING..." : "INITIATE UPLINK"}
+                      {isUploading ? "TRANSMITTING..." : "Submit"}
                   </span>
                   
                   {/* Hover Shine Effect */}

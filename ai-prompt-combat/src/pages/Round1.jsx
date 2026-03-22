@@ -24,7 +24,7 @@ import PreviewPanel from "../components/Round1/PreviewPanel";
 import NavigationControls from "../components/Round1/NavigationControls";
 
 const TOTAL_PAIRS = 5;
-const TIME_LIMIT_SECONDS = 25 * 60; // 25 Minutes
+const TIME_LIMIT_SECONDS = 30 * 60; // 30 Minutes
 
 export default function Round1() {
   const navigate = useNavigate();
