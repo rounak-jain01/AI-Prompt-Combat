@@ -30,7 +30,8 @@ import { API_BASE_URL } from "../config";
 // --- CONFIGURATION ---
 const TOTAL_TIME = 1800; // 15 Minutes
 // Dhyan rahe: Jab asli video lagayein toh server par CORS allow hona chahiye (Firebase Storage wagaira default allow karte hain)
-const REFERENCE_VIDEO_URL = "https://www.w3schools.com/html/mov_bbb.mp4"; 
+// const REFERENCE_VIDEO_URL = "./"; 
+const REFERENCE_VIDEO_URL = "/Round2video/round2Video.mp4"; 
 
 // 👇 CLOUDINARY CONFIG
 const CLOUD_NAME = "drfjs718u"; 

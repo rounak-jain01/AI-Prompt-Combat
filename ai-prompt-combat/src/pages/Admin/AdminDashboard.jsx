@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
-import { collection, doc, updateDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, updateDoc, onSnapshot, getDocs } from "firebase/firestore";
 import { db } from "../../firebase"; 
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../../config"; 
+// import { collection, doc, updateDoc, onSnapshot, getDocs } from "firebase/firestore";
+import * as XLSX from "xlsx"; // ✅ NAYI EXCEL LIBRARY
 import { 
   ShieldAlert, LogOut, Play, FileVideo, Terminal,
   Calendar, MessageSquare, Trash2, Edit3, X, Save, 
   UserPlus, Search, RotateCcw, Ban, RefreshCw, Wifi, 
-  Link as LinkIcon, Copy, Check, AlertTriangle, Users
+  Link as LinkIcon, Copy, Check, AlertTriangle, Users, Download
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -18,6 +20,7 @@ export default function AdminDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // --- DATA STATES ---
+  // 🟢 Yahan onSnapshot laga hai, isliye data hamesha real-time rahega
   const [users, setUsers] = useState([]);
   const [globalSettings, setGlobalSettings] = useState({
     round1Open: false, 
@@ -25,7 +28,7 @@ export default function AdminDashboard() {
     targetDate: "", 
     updates: [],
     topNAllowedForRound2: 50,
-    stats: { participants: 0, prizePool: "₹50K", systemStatus: "Standby" }
+    stats: { participants: 0, prizePool: "₹10K", systemStatus: "Standby" }
   });
   const [newMessage, setNewMessage] = useState("");
   const [topNInput, setTopNInput] = useState(50);
@@ -84,10 +87,8 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // 2. USER MANAGEMENT ACTIONS
+  // 2. USER MANAGEMENT ACTIONS (UNTOUCHED)
   // ==========================================
-  
-  // A. Add User (Calls Python Backend)
   const handleCreateUser = async () => {
       if(!newUser.fullName || !newUser.email) return toast.error("Name & Email required");
       const auth = getAuth();
@@ -107,7 +108,6 @@ export default function AdminDashboard() {
       } catch (e) { toast.error(e.message, { id: tId }); }
   };
 
-  // B. Delete User Permanently (Calls Python Backend)
   const handleDeleteUser = async (userId) => {
       if(!window.confirm("⚠️ DANGER: This will permanently delete the user from Authentication and Database. Proceed?")) return;
       const tId = toast.loading("Obliterating User...");
@@ -125,7 +125,6 @@ export default function AdminDashboard() {
       } catch (e) { toast.error(e.message || "Delete Failed", { id: tId }); }
   };
 
-  // C. Save User Edits (Direct Firestore)
   const handleSaveUser = async () => {
       if (!selectedUser) return;
       const tId = toast.loading("Saving...");
@@ -140,7 +139,7 @@ export default function AdminDashboard() {
   const quickUpdateStatus = (round, status) => setSelectedUser(prev => ({ ...prev, [`${round}_status`]: status }));
 
   // ==========================================
-  // 3. GLOBAL SETTINGS ACTIONS
+  // 3. GLOBAL SETTINGS ACTIONS (UNTOUCHED)
   // ==========================================
   const updateGlobalSetting = async (field, value) => {
       await updateDoc(doc(db, "settings", "lobby"), { [field]: value });
@@ -176,7 +175,7 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // 4. HELPERS (UPDATED FILTERS)
+  // 4. HELPERS
   // ==========================================
   const filteredUsers = users.filter(user => {
       const term = searchTerm.toLowerCase();
@@ -184,7 +183,6 @@ export default function AdminDashboard() {
       
       if (!matchesSearch) return false;
 
-      // Smart Round Filtering
       if (filterStatus === "all") return true;
       if (filterStatus === "r1_started") return user.round1_status === "started";
       if (filterStatus === "r1_submitted") return user.round1_status === "submitted";
@@ -218,6 +216,72 @@ export default function AdminDashboard() {
         disqualified: "bg-red-900/30 text-red-400 border-red-600/50",
     };
     return <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold border ${styles[status] || styles.pending}`}>{status || "Pending"}</span>;
+  };
+
+
+  // ==========================================
+  // 5. EXPORT TO PROPER EXCEL (DIRECT FROM FIREBASE)
+  // ==========================================
+  const exportToExcel = async () => {
+    const toastId = toast.loading("Fetching live data from database...");
+    
+    try {
+      // 1. DIRECT FIREBASE CALL: Button dabte hi sabse fresh data mango
+      const querySnapshot = await getDocs(collection(db, "users"));
+      console.log(querySnapshot)
+      const freshUsers = querySnapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() }));
+
+      // 2. Admin accounts filter karo
+      const validUsers = freshUsers.filter(u => u.role !== 'admin'); 
+      
+      // 3. Sort Logic (Highest Total Score first)
+      const sortedUsers = [...validUsers].sort((a, b) => {
+          const scoreA = (a.round2_score || 0) + (a.round1_score || 0);
+          const scoreB = (b.round2_score || 0) + (b.round1_score || 0);
+          return scoreB - scoreA;
+      });
+      console.log(sortedUsers)
+
+      // 4. Prepare data in JSON format for the Excel library
+      const excelData = sortedUsers.map((u, index) => {
+        const isFlagged = (u.round1_status === 'disqualified' || u.round2_status === 'disqualified') ? "YES" : "NO";
+        const totalScore = (u.round1_score || 0) + (u.round2_score || 0);
+
+        return {
+          "Rank": index + 1,
+          "Full Name": u.fullName || "Unknown",
+          "Email Address": u.email || "N/A",
+          "Round 1 Status": (u.round1_status || "pending").toUpperCase(),
+          "Round 1 Score": u.round1_score || 0,
+          "Round 2 Status": (u.round2_status || "pending").toUpperCase(),
+          "Round 2 Score": u.round2_score || 0,
+          "Total Score": totalScore,
+          "Video Link": u.round2_video_link || "N/A",
+          "Flagged (Cheating)": isFlagged
+        };
+      });
+
+      // 5. Create a new Workbook and add the JSON data as a Worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      
+      // Make columns wider for Excel
+      worksheet["!cols"] = [
+          { wch: 6 }, { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 12 }, 
+          { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 40 }, { wch: 18 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Live Results");
+
+      // 6. Trigger proper .xlsx file download
+      const fileName = `AIPromptCombat_Live_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      
+      toast.success("Excel Sheet Downloaded Successfully!", { id: toastId });
+    } catch (error) {
+      console.error("Export Error:", error);
+      toast.error("Failed to fetch live data.", { id: toastId });
+    }
   };
 
   // ==========================================
@@ -294,15 +358,12 @@ export default function AdminDashboard() {
         {/* ==================== TAB 2: USERS ==================== */}
         {activeTab === "users" && (
             <div className="animate-in fade-in">
-                {/* Control Bar */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-[#111] p-4 rounded-xl border border-white/5">
                     <div className="relative w-full md:w-1/2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                         <input type="text" placeholder="Search by Name or Email..." className="w-full bg-black border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-[#D4AF37] outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     <div className="flex gap-2 overflow-x-auto w-full md:w-auto">
-                        
-                        {/* UPDATED FILTER BUTTONS */}
                         {filterOptions.map(f => (
                             <button 
                                 key={f.id} 
@@ -312,12 +373,10 @@ export default function AdminDashboard() {
                                 {f.label}
                             </button>
                         ))}
-
                         <button onClick={() => { setIsAddModalOpen(true); setInviteLink(""); }} className="ml-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold text-xs uppercase flex items-center gap-2 shadow-lg"><UserPlus size={16}/> Add User</button>
                     </div>
                 </div>
 
-                {/* Users Table */}
                 <div className="bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -359,32 +418,40 @@ export default function AdminDashboard() {
 
         {/* ==================== TAB 3: LOBBY CONFIG ==================== */}
         {activeTab === "lobby" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
                 
-                {/* Timer Control */}
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Calendar size={20} className="text-[#D4AF37]" /> Timer Setup</h3>
                     <input type="datetime-local" className="bg-black border border-white/20 rounded p-3 text-white w-full focus:border-[#D4AF37] outline-none"
                         value={formatDateForInput(globalSettings.targetDate)} onChange={handleDateChange} />
                 </div>
 
-                {/* Round 2 Qualification Limit */}
                 <div className="bg-[#111] border border-[#D4AF37]/30 rounded-2xl p-6 shadow-[0_0_20px_rgba(212,175,55,0.1)]">
                     <h3 className="text-lg font-bold text-[#D4AF37] mb-2 flex items-center gap-2"><Users size={20} /> R2 Qualification Limit</h3>
                     <p className="text-xs text-gray-400 mb-4">Set how many top players from Leaderboard can access Round 2.</p>
                     <div className="flex gap-4 items-center">
                         <input 
                             type="number" 
-                            className="bg-black border border-white/20 rounded p-3 text-white w-24 focus:border-[#D4AF37] text-center font-bold text-xl outline-none"
+                            className="bg-black border border-white/20 rounded p-3 text-white w-20 focus:border-[#D4AF37] text-center font-bold text-xl outline-none"
                             value={topNInput} 
                             onChange={(e) => setTopNInput(e.target.value)} 
                         />
-                        <button onClick={handleSaveTopN} className="bg-[#D4AF37] text-black px-6 py-3 rounded hover:bg-[#b8952b] font-bold text-sm">SET LIMIT</button>
+                        <button onClick={handleSaveTopN} className="bg-[#D4AF37] text-black px-4 py-3 rounded hover:bg-[#b8952b] font-bold text-sm">SET LIMIT</button>
                     </div>
                 </div>
 
-                {/* Live Feed */}
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 lg:col-span-2">
+                {/* 📊 REAL-TIME EXCEL EXPORT BUTTON */}
+                <div className="bg-[#111] border border-green-500/30 rounded-2xl p-6 shadow-[0_0_20px_rgba(34,197,94,0.1)] flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-green-400 mb-2 flex items-center gap-2"><Download size={20} /> Export Results (.xlsx)</h3>
+                        <p className="text-xs text-gray-400 mb-4">Download real-time leaderboard with proper Excel formatting.</p>
+                    </div>
+                    <button onClick={exportToExcel} className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-500 font-bold text-sm uppercase flex items-center justify-center gap-2 shadow-lg">
+                        <Download size={16} /> Download Excel
+                    </button>
+                </div>
+
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 lg:col-span-3">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><MessageSquare size={20} className="text-blue-400" /> Live Feed</h3>
                     <div className="flex gap-2 mb-4">
                         <input type="text" placeholder="Type announcement..." className="flex-1 bg-black border border-white/20 rounded p-3 text-white focus:border-blue-400 outline-none"
