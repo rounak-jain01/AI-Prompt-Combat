@@ -129,14 +129,14 @@ const Login = () => {
 
           {/* Password Input */}
           <div className="space-y-1.5">
-            <div className="flex justify-between items-center ml-1">
+            {/* <div className="flex justify-between items-center ml-1">
               <label className="text-xs font-medium text-gray-400">
                 Password
               </label>
               <a href="#" className="text-xs text-primary hover:underline">
                 Forgot Password?
               </a>
-            </div>
+            </div> */}
             <div className="relative group">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
                 <Lock size={16} />
