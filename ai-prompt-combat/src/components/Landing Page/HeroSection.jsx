@@ -16,7 +16,7 @@ const getEventDate = () => {
   return new Date(year, 3, 2, 11, 0, 0);
 };
 
-const EVENT_DATE = getEventDate();
+// const EVENT_DATE = getEventDate();
 
 
 
@@ -131,7 +131,7 @@ const HeroSection = () => {
           </motion.p>
 
           {/* COUNTDOWN TO EVENT */}
-          <Countdown />
+          {/* <Countdown /> */}
 
           {/* BUTTONS */}
           <motion.div
